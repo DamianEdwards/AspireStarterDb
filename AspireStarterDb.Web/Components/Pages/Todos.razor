@@ -1,0 +1,40 @@
+﻿@page "/todos"
+@using System.ComponentModel.DataAnnotations
+@attribute [StreamRendering(true)]
+
+@inject TodosApiClient TodosApi
+
+<PageTitle>Todos</PageTitle>
+
+<h1>Todos</h1>
+
+<p>This component demonstrates showing data loaded from a database via backend API service.</p>
+
+@if (todos == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <ul>
+        @foreach (var todo in todos)
+        {
+            <li class="@(todo.IsComplete ? "complete" : "incomplete")">
+                @todo.Title
+                @if (todo.IsComplete)
+                {
+                    <span class="bi bi-check-circle-fill text-success" aria-hidden="true" area-label="Complete"></span>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private Todo[]? todos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        todos = await TodosApi.GetTodosAsync();
+    }
+}

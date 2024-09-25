@@ -1,0 +1,12 @@
+﻿@AspireStarterDb.ApiService_HostAddress = https://localhost:7318
+
+###
+
+# Get all Todos
+GET {{AspireStarterDb.ApiService_HostAddress}}/todos
+
+###
+
+# Get todo by id
+@id=1
+GET {{AspireStarterDb.ApiService_HostAddress}}/todos/{{id}}
