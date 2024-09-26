@@ -8,15 +8,19 @@ var postgres = builder.AddPostgres("postgres")
 
 var todosDb = postgres.AddDatabase("todosdb");
 
-var apiService = builder.AddProject<Projects.AspireStarterDb_ApiService>("apiservice")
-    .WithReference(todosDb);
+var apiDbService = builder.AddProject<Projects.AspireStarterDb_ApiDbService>("apidbservice")
+    .WithReference(todosDb)
+    .WaitFor(postgres);
 
-builder.AddProject<Projects.AspireStarterDb_ApiDbService>("apidbservice")
-    .WithReference(todosDb);
+var apiService = builder.AddProject<Projects.AspireStarterDb_ApiService>("apiservice")
+    .WithReference(todosDb)
+    .WaitFor(apiDbService);
 
 builder.AddProject<Projects.AspireStarterDb_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithReference(cache)
-    .WithReference(apiService);
+    .WithReference(apiService)
+    .WaitFor(apiService)
+    .WaitFor(cache);
 
 builder.Build().Run();
