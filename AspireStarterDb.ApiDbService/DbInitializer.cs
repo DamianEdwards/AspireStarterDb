@@ -4,26 +4,19 @@ using OpenTelemetry.Trace;
 
 namespace AspireStarterDb.ApiDbService;
 
-internal class DbInitializer
-{
-    private DbInitializer() { }
-
-    public const string ActivitySourceName = nameof(DbInitializer);
-}
-
-internal class DbInitializer<TDbContext>(IServiceProvider serviceProvider) : BackgroundService
+internal class DbInitializer<TDbContext>(IHostEnvironment hostEnvironment, IServiceProvider serviceProvider) : BackgroundService
     where TDbContext : DbContext
 {
-    private static readonly ActivitySource _activitySource = new(DbInitializer.ActivitySourceName);
+    private readonly ActivitySource _activitySource = new(hostEnvironment.ApplicationName);
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        using var activity = _activitySource.StartActivity($"Initializing database for {typeof(TDbContext).Name}", ActivityKind.Client);
+        using var activity = _activitySource.StartActivity($"Initialize {typeof(TDbContext).Name}", ActivityKind.Client);
 
         try
         {
             using var scope = serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
+            await using var dbContext = scope.ServiceProvider.GetRequiredService<TDbContext>();
 
             // Update to the latest migration. This will create the database if it doesn't exist.
             // For more control over the migration process, consider using the MigrateAsync overload that accepts a specific migration name.

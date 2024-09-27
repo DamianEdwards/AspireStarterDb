@@ -1,16 +1,18 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache")
-    .WithRedisCommander();
+    .WithRedisInsight();
 
-var postgres = builder.AddPostgres("postgres")
-    .WithPgAdmin();
+var dbServer = builder.AddSqlServer("sqlserver");
 
-var todosDb = postgres.AddDatabase("todosdb");
+//var postgres = builder.AddPostgres("postgres")
+//    .WithPgAdmin();
+
+var todosDb = dbServer.AddDatabase("todosdb");
 
 var apiDbService = builder.AddProject<Projects.AspireStarterDb_ApiDbService>("apidbservice")
     .WithReference(todosDb)
-    .WaitFor(postgres);
+    .WaitFor(todosDb);
 
 var apiService = builder.AddProject<Projects.AspireStarterDb_ApiService>("apiservice")
     .WithReference(todosDb)
