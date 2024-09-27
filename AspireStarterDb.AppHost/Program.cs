@@ -6,9 +6,11 @@ var cache = builder.AddRedis("cache")
     .WithRedisInsight();
 
 //var dbServer = builder.AddPostgres("postgres")
+//    .WithLifetime(ContainerLifetime.Persistent)
 //    .WithPgAdmin();
 
-var dbServer = builder.AddSqlServer("sqlserver");
+var dbServer = builder.AddSqlServer("sqlserver")
+    .WithLifetime(ContainerLifetime.Persistent);
 
 var todosDb = dbServer.AddDatabase("todosdb");
 
