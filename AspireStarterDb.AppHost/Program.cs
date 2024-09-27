@@ -5,7 +5,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var cache = builder.AddRedis("cache")
     .WithRedisInsight();
 
-//var postgres = builder.AddPostgres("postgres")
+//var dbServer = builder.AddPostgres("postgres")
 //    .WithPgAdmin();
 
 var dbServer = builder.AddSqlServer("sqlserver");
