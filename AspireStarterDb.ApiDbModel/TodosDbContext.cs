@@ -13,11 +13,11 @@ public class TodosDbContext(DbContextOptions<TodosDbContext> options) : DbContex
         if (!await todosDbContext.Todos.AnyAsync(cancellationToken))
         {
             todosDbContext.Todos.AddRange(
-                new Todo { Id = 1, Title = "Mow the lawn", IsComplete = false },
-                new Todo { Id = 2, Title = "Take out the trash", IsComplete = false },
-                new Todo { Id = 3, Title = "Vacuum the house", IsComplete = true },
-                new Todo { Id = 4, Title = "Wash the car", IsComplete = false },
-                new Todo { Id = 5, Title = "Clean the gutters", IsComplete = true }
+                new Todo { Title = "Mow the lawn", IsComplete = false },
+                new Todo { Title = "Take out the trash", IsComplete = false },
+                new Todo { Title = "Vacuum the house", IsComplete = true },
+                new Todo { Title = "Wash the car", IsComplete = false },
+                new Todo { Title = "Clean the gutters", IsComplete = true }
             );
 
             await dbContext.SaveChangesAsync(cancellationToken);
