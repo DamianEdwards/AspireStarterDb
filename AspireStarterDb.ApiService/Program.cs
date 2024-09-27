@@ -1,13 +1,11 @@
 using AspireStarterDb.ApiDbModel;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire integrations.
 builder.AddServiceDefaults();
-
-builder.AddSqlServerDbContext<TodosDbContext>("todosdb");
 //builder.AddNpgsqlDbContext<TodosDbContext>("todosdb");
+builder.AddSqlServerDbContext<TodosDbContext>("todosdb");
 
 // Add services to the container.
 builder.Services.AddProblemDetails();

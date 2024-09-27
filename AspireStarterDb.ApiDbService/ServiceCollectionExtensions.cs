@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using AspireStarterDb.ApiDbModel;
+using AspireStarterDb.ApiDbService;
 
-namespace AspireStarterDb.ApiDbService;
+namespace Microsoft.Extensions.Hosting;
 
-internal static class DbInitializerServiceCollectionExtensions
+internal static class ServiceCollectionExtensions
 {
     public static IHostApplicationBuilder AddTodosDbContext(this IHostApplicationBuilder builder, string connectionName)
     {
