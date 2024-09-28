@@ -23,10 +23,11 @@ public static class TodosApi
 
             db.Todos.Add(todo);
             await db.SaveChangesAsync();
+
             return Results.Created($"/api/Todo/{todo.Id}", todo);
         });
 
-        todos.MapPut("/{id}", async (int id, Todo todo, TodosDbContext db) =>
+        todos.MapPut("/{id:int}", async (int id, Todo todo, TodosDbContext db) =>
         {
             if (id != todo.Id)
             {
@@ -48,11 +49,12 @@ public static class TodosApi
             return affected == 1 ? Results.Ok() : Results.NotFound();
         });
 
-        todos.MapDelete("/{id}", async (int id, TodosDbContext db) =>
+        todos.MapDelete("/{id:int}", async (int id, TodosDbContext db) =>
         {
             var affected = await db.Todos
                 .Where(todo => todo.Id == id)
                 .ExecuteDeleteAsync();
+
             return affected == 1 ? Results.Ok() : Results.NotFound();
         });
 
