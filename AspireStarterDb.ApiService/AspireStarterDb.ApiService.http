@@ -2,7 +2,7 @@
 
 ###
 
-# Get all Todos
+# Get all todos
 GET {{AspireStarterDb.ApiService_HostAddress}}/todos
 
 ###
@@ -10,3 +10,24 @@ GET {{AspireStarterDb.ApiService_HostAddress}}/todos
 # Get todo by id
 @id=1
 GET {{AspireStarterDb.ApiService_HostAddress}}/todos/{{id}}
+
+###
+
+# Create todo
+POST {{AspireStarterDb.ApiService_HostAddress}}/todos
+Content-Type: application/json
+{
+  "title": "Read a book",
+  "isComplete": false
+}
+
+###
+
+# Update todo
+PUT {{AspireStarterDb.ApiService_HostAddress}}/todos/{{id}}
+Content-Type: application/json
+{
+  "id": {{id}},
+  "title": "Mow the lawn",
+  "isComplete": true
+}
