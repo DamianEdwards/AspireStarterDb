@@ -4,7 +4,6 @@ namespace AspireStarterDb.AppHost;
 
 internal static class ResourceBuilderExtensions
 {
-#pragma warning disable ASPIREEVENTING001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     /// <summary>
     /// Adds a <see cref="HealthChecks.Uris.UriHealthCheck"/> to the resource that checks the endpoint named 'https'.
     /// </summary>
@@ -19,6 +18,7 @@ internal static class ResourceBuilderExtensions
         where TResource : IResourceWithEndpoints
         => WithUriHealthCheck(builder, "http", path);
 
+#pragma warning disable ASPIREEVENTING001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
     /// <summary>
     /// Adds a <see cref="HealthChecks.Uris.UriHealthCheck"/> to the resource that checks the endpoint with the specified name.
     /// </summary>
@@ -71,6 +71,5 @@ internal static class ResourceBuilderExtensions
 
         return builder;
     }
-
 #pragma warning restore ASPIREEVENTING001
 }
