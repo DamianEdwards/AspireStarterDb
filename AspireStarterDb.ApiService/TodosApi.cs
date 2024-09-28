@@ -16,6 +16,11 @@ public static class TodosApi
 
         todos.MapPost("/", async (Todo todo, TodosDbContext db) =>
         {
+            if (todo.Id != 0)
+            {
+                return Results.Problem("Id must not be specified when creating a new todo.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
             if (!ValidationHelper.IsValid(todo, out var validationErrors))
             {
                 return Results.ValidationProblem(validationErrors);
@@ -31,7 +36,7 @@ public static class TodosApi
         {
             if (id != todo.Id)
             {
-                return Results.BadRequest();
+                return Results.Problem($"Id in the path ({id}) does not match the Id in the body ({todo.Id}).", statusCode: StatusCodes.Status400BadRequest);
             }
 
             if (!ValidationHelper.IsValid(todo, out var validationErrors))
