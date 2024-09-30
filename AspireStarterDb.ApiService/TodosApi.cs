@@ -8,7 +8,8 @@ public static class TodosApi
 {
     public static IEndpointRouteBuilder MapTodosApi(this IEndpointRouteBuilder app)
     {
-        var todos = app.MapGroup("/todos");
+        var prefix = "/todos";
+        var todos = app.MapGroup(prefix);
 
         todos.MapGet("/", (TodosDbContext db) => db.Todos.ToListAsync());
 
@@ -30,7 +31,7 @@ public static class TodosApi
             db.Todos.Add(todo);
             await db.SaveChangesAsync();
 
-            return Results.Created($"/api/Todo/{todo.Id}", todo);
+            return Results.Created($"{prefix}/{todo.Id}", todo);
         });
 
         todos.MapPut("/{id:int}", async (int id, Todo todo, TodosDbContext db) =>
