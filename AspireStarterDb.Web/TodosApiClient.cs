@@ -50,30 +50,49 @@ public class TodosApiClient(HttpClient httpClient)
 
         return response.StatusCode switch
         {
-            HttpStatusCode.OK => (true, null),
+            HttpStatusCode.NoContent => (true, null),
             HttpStatusCode.BadRequest => (false, await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken)),
             _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
         };
     }
 
-    public async Task<HttpValidationProblemDetails?> DeleteTodoAsync(Todo todo, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteTodoAsync(int id, CancellationToken cancellationToken = default)
     {
-        var response = await httpClient.DeleteAsync($"/todos/{todo.Id}", cancellationToken);
+        var response = await httpClient.DeleteAsync($"/todos/{id}", cancellationToken);
 
         return response.StatusCode switch
         {
-            HttpStatusCode.OK or HttpStatusCode.NotFound => null,
+            HttpStatusCode.NoContent => true,
+            HttpStatusCode.NotFound => false,
+            _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
+        };
+    }
+
+    public Task MarkCompleteAsync(int id, CancellationToken cancellationToken = default)
+        => SetIsCompleteAsync(id, true, cancellationToken);
+
+    public Task MarkIncompleteAsync(int id, CancellationToken cancellationToken = default)
+        => SetIsCompleteAsync(id, false, cancellationToken);
+
+    private async Task<bool> SetIsCompleteAsync(int id, bool isComplete, CancellationToken cancellationToken)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/todos/{id}/isComplete", isComplete, cancellationToken);
+
+        return response.StatusCode switch
+        {
+            HttpStatusCode.NoContent => true,
+            HttpStatusCode.NotFound => false,
             _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
         };
     }
 }
 
-public class Todo(int id, string title, bool isComplete)
+public class Todo
 {
-    public int Id { get; set; } = id;
+    public int Id { get; set; }
 
     [Required]
-    public required string Title { get; set; } = title;
+    public string? Title { get; set; }
 
-    public bool IsComplete { get; set; } = isComplete;
+    public bool IsComplete { get; set; }
 }

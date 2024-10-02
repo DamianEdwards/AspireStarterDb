@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using AspireStarterDb.ApiDbModel;
 using AspireStarterDb.ApiService;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -19,8 +20,7 @@ public static class TodosApi
         {
             if (todo.Id != 0)
             {
-                return Results.Problem("Id must not be specified when creating a new todo.",
-                    statusCode: StatusCodes.Status400BadRequest);
+                return Results.Problem("Id must not be specified when creating a new todo.", statusCode: StatusCodes.Status400BadRequest);
             }
 
             if (!ValidationHelper.IsValid(todo, out var validationErrors))
@@ -54,7 +54,7 @@ public static class TodosApi
                     .SetProperty(t => t.IsComplete, todo.IsComplete)
                 );
 
-            return affected == 1 ? Results.Ok() : Results.NotFound();
+            return affected == 1 ? Results.NoContent() : Results.NotFound();
         });
 
         todos.MapDelete("/{id:int}", async (int id, TodosDbContext db) =>
@@ -63,7 +63,18 @@ public static class TodosApi
                 .Where(todo => todo.Id == id)
                 .ExecuteDeleteAsync();
 
-            return affected == 1 ? Results.Ok() : Results.NotFound();
+            return affected == 1 ? Results.NoContent() : Results.NotFound();
+        });
+
+        todos.MapPut("/{id:int}/isComplete", async (int id, [FromBody] bool isComplete, TodosDbContext db) =>
+        {
+            var affected = await db.Todos
+                .Where(model => model.Id == id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(t => t.IsComplete, isComplete)
+                );
+
+            return affected == 1 ? Results.NoContent() : Results.NotFound();
         });
 
         return app;

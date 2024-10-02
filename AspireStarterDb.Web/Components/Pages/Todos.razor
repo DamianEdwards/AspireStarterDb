@@ -1,40 +1,139 @@
 ﻿@page "/todos"
-@using System.ComponentModel.DataAnnotations
 @attribute [StreamRendering(true)]
 
 @inject TodosApiClient TodosApi
+@inject NavigationManager Navigation
 
 <PageTitle>Todos</PageTitle>
 
 <h1>Todos</h1>
 
-<p>This component demonstrates showing data loaded from a database via backend API service.</p>
+<p>This component demonstrates showing data loaded from a database via a backend API service.</p>
+
+<EditForm EditContext="createEditContext" OnValidSubmit="CreateAsync" FormName="create-todo" Enhance class="mb-4">
+    <DataAnnotationsValidator />
+
+    <div class="row g-2 align-items-center">
+        <div class="col-7">
+            <div class="form-floating">
+                <InputText @bind-Value="Model!.Title" id="title" class="@GetFieldClass("Title")" placeholder="Mop the floor" />
+                <label for="title">What do you need to do?</label>
+            </div>
+        </div>
+        <div class="col-sm">
+            <button type="submit" class="btn btn-primary" disabled="@(todos == null)">Add</button>
+        </div>
+    </div>
+    <div class="row">
+        <ValidationMessage For="() => Model!.Title" />
+        <ValidationMessage For="() => Model" />
+    </div>
+</EditForm>
 
 @if (todos == null)
 {
-    <p><em>Loading...</em></p>
+    <ul class="list-group w-75">
+        <li class="list-group-item placeholder-glow"></li>
+        <li class="list-group-item placeholder-glow"></li>
+        <li class="list-group-item placeholder-glow"></li>
+        <li class="list-group-item placeholder-glow"></li>
+        <li class="list-group-item placeholder-glow"></li>
+    </ul>
+}
+else if (todos.Length == 0)
+{
+    <p class="text-information">
+        Todos list is empty! Add one using the form above.
+    </p>
 }
 else
 {
-    <ul>
-        @foreach (var todo in todos)
-        {
-            <li class="@(todo.IsComplete ? "complete" : "incomplete")">
-                @todo.Title
-                @if (todo.IsComplete)
-                {
-                    <span class="bi bi-check-circle-fill text-success" aria-hidden="true" area-label="Complete"></span>
-                }
-            </li>
-        }
-    </ul>
+    <form method="post" @formname="toggle-todo" @onsubmit="UpdateAsync" data-enhance>
+        <AntiforgeryToken />
+        <div class="list-group list-group-flush w-75">
+            @foreach (var todo in todos)
+            {
+                <div class="list-group-item">
+                <div class="row align-items-center @(todo.IsComplete ? "complete" : "incomplete")">
+                    <div class="col-auto">
+                        <button type="submit" class="btn" name="@(todo.IsComplete ? "unsetCompletedId" : "setCompletedId")" value="@todo.Id" title="Toggle complete">
+                            <i class="bi @(todo.IsComplete ? "bi-check-circle-fill" : "bi-circle")"></i>
+                        </button>
+                    </div>
+                    <div class="col">
+                        @todo.Title
+                    </div>
+                    <button type="submit" class="btn-close position-absolute top-50 end-0 translate-middle-y" name="deleteId" value="@todo.Id" title="Delete" aria-label="Delete"></button>
+                </div>
+                </div>
+            }
+        </div>
+    </form>
 }
 
 @code {
+    private EditContext? createEditContext;
+    private ValidationMessageStore? messageStore;
     private Todo[]? todos;
+
+    [SupplyParameterFromForm]
+    private Todo? Model { get; set; }
+
+    [SupplyParameterFromForm]
+    private int? setCompletedId { get; set; }
+
+    [SupplyParameterFromForm]
+    private int? unsetCompletedId { get; set; }
+
+    [SupplyParameterFromForm]
+    private int? deleteId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        Model ??= new();
+        createEditContext = new(Model);
+        messageStore = new(createEditContext);
         todos = await TodosApi.GetTodosAsync();
+    }
+
+    private async Task CreateAsync()
+    {
+        var (wasCreated, _, validationProblem) = await TodosApi.CreateTodoAsync(Model!);
+
+        if (wasCreated)
+        {
+            Navigation.Refresh();
+        }
+        else
+        {
+            messageStore.AddValidationErrors(createEditContext, validationProblem);
+            createEditContext!.NotifyValidationStateChanged();
+        }
+    }
+
+    private async Task UpdateAsync()
+    {
+        if (setCompletedId.HasValue)
+        {
+            await TodosApi.MarkCompleteAsync(setCompletedId.Value);
+        }
+        else if (unsetCompletedId.HasValue)
+        {
+            await TodosApi.MarkIncompleteAsync(unsetCompletedId.Value);
+        }
+        else if (deleteId.HasValue)
+        {
+            await TodosApi.DeleteTodoAsync(deleteId.Value);
+        }
+        Navigation.Refresh();
+    }
+
+    private string GetFieldClass(string fieldName)
+    {
+        if (createEditContext?.IsValid(new FieldIdentifier(Model!, fieldName)) == false)
+        {
+            return "form-control is-invalid";
+        }
+        return "form-control";
     }
 }
