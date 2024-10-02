@@ -57,11 +57,20 @@ else
                 <div class="list-group-item">
                     <div class="row align-items-center @(todo.IsComplete ? "complete" : "incomplete")">
                         <div class="col-auto">
-                            <button type="submit" class="btn"
-                                    name="@(todo.IsComplete ? nameof(UnsetCompletedId) : nameof(SetCompletedId))"
-                                    value="@todo.Id" title="Toggle complete">
-                                <i class="bi @(todo.IsComplete ? "bi-check-circle-fill" : "bi-circle")"></i>
-                            </button>
+                            @if (!todo.IsComplete)
+                            {
+                                <button type="submit" class="btn" name="@nameof(SetCompletedId)"
+                                        value="@todo.Id" title="Mark complete">
+                                    <i class="bi bi-circle"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="submit" class="btn" name="@nameof(UnsetCompletedId)"
+                                        value="@todo.Id" title="Mark incomplete">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </button>
+                            }
                         </div>
                         <div class="col">
                             @todo.Title
