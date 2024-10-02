@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
+﻿using System.Linq.Expressions;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace AspireStarterDb.Web.Components;
 
@@ -23,5 +24,14 @@ public static class FormExtensions
         {
             store.Add(() => editContext.Model, validationProblemDetails.Detail ?? "An error occurred");
         }
+    }
+
+    public static string GetFieldClass<TValue>(this EditContext? editContext, Expression<Func<TValue>>? accessor)
+    {
+        if (accessor is not null && editContext?.IsValid(FieldIdentifier.Create(accessor)) == false)
+        {
+            return "form-control is-invalid";
+        }
+        return "form-control";
     }
 }
