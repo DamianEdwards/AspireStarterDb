@@ -1,5 +1,4 @@
 ﻿@page "/todos"
-@using System.Linq.Expressions
 @attribute [StreamRendering(true)]
 
 @inject TodosApiClient TodosApi
@@ -11,24 +10,24 @@
 
 <p>This component demonstrates handling data loaded from a database via a backend API service.</p>
 
-<EditForm EditContext="createEditContext" OnValidSubmit="CreateAsync" FormName="createTodo" Enhance class="mb-4">
+<EditForm EditContext="createEditContext" OnValidSubmit="CreateAsync" FormName="CreateTodo" Enhance class="mb-4">
     <DataAnnotationsValidator />
 
     <div class="row g-2 align-items-center">
         <div class="col-7">
             <div class="form-floating">
-                <InputText @bind-Value="NewTodo!.Title" id="title"
-                           class="@createEditContext.GetFieldClass(() => NewTodo!.Title)" placeholder="Mop the floor" />
+                <InputText @bind-Value="Todo!.Title" id="title"
+                           class="@createEditContext.GetFieldClass(() => Todo!.Title)" placeholder="Mop the floor" />
                 <label for="title">What do you need to do?</label>
             </div>
         </div>
         <div class="col-sm">
-            <button type="submit" class="btn btn-primary" disabled="@(todos == null)">Add</button>
+            <button type="submit" class="btn btn-primary" disabled="@(todos is null)">Add</button>
         </div>
     </div>
     <div class="row">
-        <ValidationMessage For="() => NewTodo!.Title" />
-        <ValidationMessage For="() => NewTodo" />
+        <ValidationMessage For="() => Todo!.Title" />
+        <ValidationMessage For="() => Todo" />
     </div>
 </EditForm>
 
@@ -50,46 +49,39 @@ else if (todos.Length == 0)
 }
 else
 {
-    <form method="post" @formname="updateTodo" @onsubmit="UpdateAsync" data-enhance>
-        <AntiforgeryToken />
-        <div class="list-group list-group-flush col-12 col-lg-10 col-xl-8">
-            @foreach (var todo in todos)
-            {
-                <div class="list-group-item todos-list">
-                    <div class="row align-items-center @(todo.IsComplete ? "complete" : "incomplete")">
+    <div class="list-group list-group-flush col-12 col-lg-10 col-xl-8">
+        @foreach (var todo in todos)
+        {
+            var formName = $"UpdateTodo{todo.Id}";
+            <div class="list-group-item todos-list">
+                <div class="align-items-center @(todo.IsComplete ? "complete" : "incomplete")">
+                    <form class="row" method="post" @formname="@formName" @onsubmit="UpdateAsync" data-enhance>
+                        <AntiforgeryToken />
+                        <input type="hidden" name="@(nameof(Todo)).@(nameof(Todo.Id))" @bind-value="todo.Id" />
+                        @* First submit button is the default used when Enter is pressed to submit the form *@
+                        <input type="submit" name="@nameof(UpdateCommand)" value="@Commands.SaveChanges" class="d-none" />
                         <div class="col-auto g-1">
-                            @if (!todo.IsComplete)
-                            {
-                                <button type="submit" class="btn" name="@nameof(SetCompletedId)"
-                                        value="@todo.Id" title="Mark complete">
-                                    <i class="bi bi-circle"></i>
-                                </button>
+                            @{
+                                var icon = todo.IsComplete ? "bi-check-circle-fill" : "bi-circle";
+                                var title = todo.IsComplete ? "Mark incomplete" : "Mark complete";
+                                var command = todo.IsComplete ? Commands.SetIncomplete : Commands.SetComplete;
                             }
-                            else
-                            {
-                                <button type="submit" class="btn" name="@nameof(UnsetCompletedId)"
-                                        value="@todo.Id" title="Mark incomplete">
-                                    <i class="bi bi-check-circle-fill"></i>
-                                </button>
-                            }
+                            <button type="submit" class="btn" name="@nameof(UpdateCommand)"
+                                    value="@command" title="@title">
+                                <i class="bi @icon"></i>
+                            </button>
                         </div>
                         <div class="col g-1">
-                            @if (todo.IsComplete)
-                            {
-                                <input type="text" class="form-control title" value="@todo.Title" readonly />
-                            }
-                            else
-                            {
-                                <input type="text" class="form-control title" name="title" value="@todo.Title" />
-                            }
+                            <input type="text" class="form-control title" name="@(nameof(Todo)).@(nameof(Todo.Title))" @bind-value="todo.Title"
+                                   readonly="@todo.IsComplete" />
                         </div>
                         <button type="submit" class="btn-close position-absolute top-50 end-0 translate-middle-y"
-                                name="deleteId" value="@todo.Id" title="Delete" aria-label="Delete"></button>
-                    </div>
+                                name="@nameof(UpdateCommand)" value="@Commands.Delete" title="Delete" aria-label="Delete"></button>
+                    </form>
                 </div>
-            }
-        </div>
-    </form>
+            </div>
+        }
+    </div>
 }
 
 @code {
@@ -98,28 +90,22 @@ else
     private Todo[]? todos;
 
     [SupplyParameterFromForm]
-    private Todo? NewTodo { get; set; }
+    private Todo? Todo { get; set; }
 
     [SupplyParameterFromForm]
-    private int? SetCompletedId { get; set; }
-
-    [SupplyParameterFromForm]
-    private int? UnsetCompletedId { get; set; }
-
-    [SupplyParameterFromForm]
-    private int? DeleteId { get; set; }
+    private string UpdateCommand { get; set; } = Commands.SaveChanges;
 
     protected override async Task OnInitializedAsync()
     {
-        NewTodo ??= new();
-        createEditContext = new(NewTodo);
+        Todo ??= new();
+        createEditContext = new(Todo);
         messageStore = new(createEditContext);
         todos = await TodosApi.GetTodosAsync();
     }
 
     private async Task CreateAsync()
     {
-        var (wasCreated, _, validationProblem) = await TodosApi.CreateTodoAsync(NewTodo!);
+        var (wasCreated, _, validationProblem) = await TodosApi.CreateTodoAsync(Todo!);
 
         if (wasCreated)
         {
@@ -133,18 +119,34 @@ else
 
     private async Task UpdateAsync()
     {
-        if (SetCompletedId.HasValue)
+        if (UpdateCommand == Commands.SetComplete)
         {
-            await TodosApi.MarkCompleteAsync(SetCompletedId.Value);
+            await TodosApi.MarkCompleteAsync(Todo!.Id);
         }
-        else if (UnsetCompletedId.HasValue)
+        else if (UpdateCommand == Commands.SetIncomplete)
         {
-            await TodosApi.MarkIncompleteAsync(UnsetCompletedId.Value);
+            await TodosApi.MarkIncompleteAsync(Todo!.Id);
         }
-        else if (DeleteId.HasValue)
+        else if (UpdateCommand == Commands.Delete)
         {
-            await TodosApi.DeleteTodoAsync(DeleteId.Value);
+            await TodosApi.DeleteTodoAsync(Todo!.Id);
+        }
+        else if (UpdateCommand == Commands.SaveChanges)
+        {
+            var (wasUpdated, validationProblem) = await TodosApi.UpdateTodoAsync(Todo!);
+            if (!wasUpdated)
+            {
+                //messageStore.AddValidationErrors(createEditContext, validationProblem);
+            }
         }
         Navigation.Refresh();
+    }
+
+    private static class Commands
+    {
+        public const string SetComplete = nameof(SetComplete);
+        public const string SetIncomplete = nameof(SetIncomplete);
+        public const string SaveChanges = nameof(SaveChanges);
+        public const string Delete = nameof(Delete);
     }
 }
