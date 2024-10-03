@@ -34,7 +34,8 @@
 
 @if (todos == null)
 {
-    <div class="list-group list-group-flush w-75">
+    // Show a loading placeholder while the data is being fetched
+    <div class="list-group list-group-flush col-12 col-lg-10 col-xl-8">
         @for (var i = 0; i < 5; i++)
         {
             <div class="list-group-item placeholder-glow"><span class="placeholder col-4"></span></div>
@@ -51,12 +52,12 @@ else
 {
     <form method="post" @formname="updateTodo" @onsubmit="UpdateAsync" data-enhance>
         <AntiforgeryToken />
-        <div class="list-group list-group-flush w-75">
+        <div class="list-group list-group-flush col-12 col-lg-10 col-xl-8">
             @foreach (var todo in todos)
             {
-                <div class="list-group-item">
+                <div class="list-group-item todos-list">
                     <div class="row align-items-center @(todo.IsComplete ? "complete" : "incomplete")">
-                        <div class="col-auto">
+                        <div class="col-auto g-1">
                             @if (!todo.IsComplete)
                             {
                                 <button type="submit" class="btn" name="@nameof(SetCompletedId)"
@@ -72,8 +73,15 @@ else
                                 </button>
                             }
                         </div>
-                        <div class="col">
-                            @todo.Title
+                        <div class="col g-1">
+                            @if (todo.IsComplete)
+                            {
+                                <input type="text" class="form-control title" value="@todo.Title" readonly />
+                            }
+                            else
+                            {
+                                <input type="text" class="form-control title" name="title" value="@todo.Title" />
+                            }
                         </div>
                         <button type="submit" class="btn-close position-absolute top-50 end-0 translate-middle-y"
                                 name="deleteId" value="@todo.Id" title="Delete" aria-label="Delete"></button>
