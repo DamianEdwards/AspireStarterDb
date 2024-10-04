@@ -18,10 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0-preview.4.24503.6" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="9.0.0-preview.4.24503.6" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.0.0-preview.4.24503.6" />
-    <PackageReference Include="Aspire.Hosting.SqlServer" Version="9.0.0-preview.4.24503.6" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0-preview.4.24503.10" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.0.0-preview.4.24503.10" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.0.0-preview.4.24503.10" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="9.0.0-preview.4.24503.10" />
     <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="8.0.1" />
   </ItemGroup>
 

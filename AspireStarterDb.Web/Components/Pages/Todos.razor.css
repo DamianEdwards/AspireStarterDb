@@ -88,6 +88,6 @@
 
     .todos-list .btn-save:focus,
     .todos-list .btn-save:active,
-    input.title:focus + .btn-save {
+    .incomplete input.title:focus + .btn-save {
         visibility: visible !important;
     }

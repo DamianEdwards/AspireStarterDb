@@ -52,7 +52,7 @@ internal static class ResourceBuilderExtensions
                 return new ExecuteCommandResult { Success = false, ErrorMessage = "Endpoints are not yet allocated." };
             }
 
-            if (string.Equals(endpoint.Scheme, expectedScheme, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(endpoint.Scheme, expectedScheme, StringComparison.OrdinalIgnoreCase))
             {
                 return new ExecuteCommandResult { Success = false, ErrorMessage = $"The endpoint named '{endpointName}' on resource '{builder.Resource.Name}' does not have the expected scheme of '{expectedScheme}'." };
             }
