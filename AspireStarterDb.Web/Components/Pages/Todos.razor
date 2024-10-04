@@ -69,18 +69,21 @@ else
                         <input type="hidden" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Id))" @bind-value="todo.Id" />
                         <div class="col-auto g-1">
                             <button type="submit" class="btn btn-toggle-complete" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.IsComplete))"
-                                    value="@completedButton.Value" title="@completedButton.Title">
+                            value="@completedButton.Value" title="@completedButton.Title">
                                 <i class="bi @completedButton.Icon"></i>
                             </button>
                         </div>
                         <div class="col g-1">
-                            <div class="position-relative">
+                            <div class="position-relative item-container">
                                 <input type="text" class="@editContext.GetFieldClass(() => todo.Title)" readonly="@todo.IsComplete"
-                                       name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Title))" @bind-value="todo.Title" />
-                                <button type="submit" class="btn btn-save position-absolute top-50 start-100 translate-middle-y"
-                                        title="Save Changes" aria-label="Save changes">
-                                    <i class="bi bi-check-lg"></i>
-                                </button>
+                                name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Title))" @bind-value="todo.Title" />
+                                @if (!todo.IsComplete)
+                                {
+                                    <button type = "submit" class="btn btn-save position-absolute top-50 start-100 translate-middle-y"
+                                            title="Save Changes" aria-label="Save changes">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                }
                             </div>
                         </div>
                         <div class="col-auto g-1">
@@ -96,7 +99,7 @@ else
             </div>
         }
         @* Target form handler for all edit forms *@
-        <form @formname="UpdateTodo" @onsubmit="@UpdateAsync"></form>
+        <form @formname="UpdateTodo" @onsubmit="@UpdateAsync" class="d-none"></form>
     </div>
 }
 
@@ -129,14 +132,13 @@ else
     {
         var (wasCreated, _, validationProblem) = await TodosApi.CreateTodoAsync(CreatingTodo!);
 
-        if (wasCreated)
-        {
-            Navigation.Refresh();
-        }
-        else
+        if (!wasCreated)
         {
             createMessageStore.AddValidationErrors(createEditContext, validationProblem);
+            return;
         }
+
+        Navigation.Refresh();
     }
 
     private async Task UpdateAsync()

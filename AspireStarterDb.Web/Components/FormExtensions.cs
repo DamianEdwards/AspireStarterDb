@@ -39,7 +39,7 @@ public static class FormExtensions
             var field = FieldIdentifier.Create(accessor);
             if (editContext?.IsValid(field) == false)
             {
-                return "form-control is-invalid";
+                return $"form-control is-invalid {field.FieldName.ToLowerInvariant()}";
             }
             return $"form-control {field.FieldName.ToLowerInvariant()}";
         }

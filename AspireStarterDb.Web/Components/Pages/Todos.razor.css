@@ -35,12 +35,12 @@
     visibility: visible;
 }
 
-.todos-list .row {
-    
-}
-
 .todos-list .row.validation {
     padding-left: 20px;
+}
+
+.todos-list .incomplete .item-container {
+    padding-right: 2.0em;
 }
 
 .todos-list .incomplete .btn-toggle-complete {
@@ -57,6 +57,11 @@
 
 .todos-list ::deep input.title {
     border-color: #00000000;
+    box-shadow: none;
+}
+
+.todos-list ::deep input.title.is-invalid {
+    border-color: #dc3545 !important;
     box-shadow: none;
 }
 
@@ -86,8 +91,7 @@
         height: 1.8rem;
     }
 
-    .todos-list .btn-save:focus,
-    .todos-list .btn-save:active,
-    .incomplete input.title:focus + .btn-save {
-        visibility: visible !important;
-    }
+.todos-list .incomplete form:focus-within .btn-save,
+.todos-list .incomplete form:focus-within .btn-close {
+    visibility: visible !important;
+}
