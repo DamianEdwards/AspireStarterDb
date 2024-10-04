@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using AspireStarterDb.ApiDbModel;
 using AspireStarterDb.ApiService;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Microsoft.Extensions.Hosting;
 
