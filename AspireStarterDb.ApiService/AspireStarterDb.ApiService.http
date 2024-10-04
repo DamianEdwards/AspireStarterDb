@@ -1,5 +1,8 @@
 ﻿@AspireStarterDb.ApiService_HostAddress = https://localhost:7318
 
+# Get weather forecast
+GET {{AspireStarterDb.ApiService_HostAddress}}/weatherforecast
+
 ###
 
 # Get all todos
@@ -31,3 +34,9 @@ Content-Type: application/json
   "title": "Mow the lawn",
   "isComplete": true
 }
+
+###
+
+# Delete todo
+DELETE {{AspireStarterDb.ApiService_HostAddress}}/todos/{{id}}
+Content-Type: application/json
