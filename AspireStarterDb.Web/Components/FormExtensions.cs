@@ -5,6 +5,9 @@ namespace AspireStarterDb.Web.Components;
 
 public static class FormExtensions
 {
+    /// <summary>
+    /// Adds validation errors to the <see cref="ValidationMessageStore"/> from the <see cref="HttpValidationProblemDetails"/>.
+    /// </summary>
     public static void AddValidationErrors(this ValidationMessageStore? store, EditContext? editContext, HttpValidationProblemDetails? validationProblemDetails)
     {
         if (store is null || editContext is null || validationProblemDetails is null)
@@ -26,12 +29,21 @@ public static class FormExtensions
         }
     }
 
+    /// <summary>
+    /// Gets the CSS class values for the field based on the <see cref="EditContext"/> and <see cref="Expression{TValue}"/>.
+    /// </summary>
     public static string GetFieldClass<TValue>(this EditContext? editContext, Expression<Func<TValue>>? accessor)
     {
-        if (accessor is not null && editContext?.IsValid(FieldIdentifier.Create(accessor)) == false)
+        if (accessor is not null)
         {
-            return "form-control is-invalid";
+            var field = FieldIdentifier.Create(accessor);
+            if (editContext?.IsValid(field) == false)
+            {
+                return "form-control is-invalid";
+            }
+            return $"form-control {field.FieldName.ToLowerInvariant()}";
         }
+
         return "form-control";
     }
 }

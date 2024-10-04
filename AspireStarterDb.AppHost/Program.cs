@@ -18,7 +18,8 @@ var todosDb = dbServer.AddDatabase("todosdb");
 var apiDbService = builder.AddProject<Projects.AspireStarterDb_ApiDbService>("apidbservice")
     .WithReference(todosDb)
     .WaitFor(todosDb)
-    .WithHttpsHealthCheck("/health");
+    .WithHttpsHealthCheck("/health")
+    .WithHttpsCommand("/reset-db", "Reset Database", iconName: "DatabaseArrowUp");
 
 // The ApiService project provides backend HTTP APIs for the web frontend.
 var apiService = builder.AddProject<Projects.AspireStarterDb_ApiService>("apiservice")

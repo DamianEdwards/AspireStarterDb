@@ -67,24 +67,6 @@ public class TodosApiClient(HttpClient httpClient)
             _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
         };
     }
-
-    public Task MarkCompleteAsync(int id, CancellationToken cancellationToken = default)
-        => SetIsCompleteAsync(id, true, cancellationToken);
-
-    public Task MarkIncompleteAsync(int id, CancellationToken cancellationToken = default)
-        => SetIsCompleteAsync(id, false, cancellationToken);
-
-    private async Task<bool> SetIsCompleteAsync(int id, bool isComplete, CancellationToken cancellationToken)
-    {
-        var response = await httpClient.PutAsJsonAsync($"/todos/{id}/isComplete", isComplete, cancellationToken);
-
-        return response.StatusCode switch
-        {
-            HttpStatusCode.NoContent => true,
-            HttpStatusCode.NotFound => false,
-            _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
-        };
-    }
 }
 
 public class Todo

@@ -23,7 +23,7 @@ public static class TodosApi
                 return Results.Problem("Id must not be specified when creating a new todo.", statusCode: StatusCodes.Status400BadRequest);
             }
 
-            if (!ValidationHelper.IsValid(todo, out var validationErrors))
+            if (!ApiValidator.IsValid(todo, out var validationErrors))
             {
                 return Results.ValidationProblem(validationErrors);
             }
@@ -42,7 +42,7 @@ public static class TodosApi
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
-            if (!ValidationHelper.IsValid(todo, out var validationErrors))
+            if (!ApiValidator.IsValid(todo, out var validationErrors))
             {
                 return Results.ValidationProblem(validationErrors);
             }
@@ -62,17 +62,6 @@ public static class TodosApi
             var affected = await db.Todos
                 .Where(todo => todo.Id == id)
                 .ExecuteDeleteAsync();
-
-            return affected == 1 ? Results.NoContent() : Results.NotFound();
-        });
-
-        todos.MapPut("/{id:int}/isComplete", async (int id, [FromBody] bool isComplete, TodosDbContext db) =>
-        {
-            var affected = await db.Todos
-                .Where(model => model.Id == id)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(t => t.IsComplete, isComplete)
-                );
 
             return affected == 1 ? Results.NoContent() : Results.NotFound();
         });

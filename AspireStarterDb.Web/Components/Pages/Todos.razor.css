@@ -32,14 +32,17 @@
     visibility: hidden;
 }
 
-.todos-list.list-group-item:hover .btn-close {
+.todos-list .list-group-item:hover .btn-close {
     visibility: visible;
 }
 
 .todos-list .row {
-    padding-right: 20px;
+    
 }
 
+.todos-list .row.validation {
+    padding-left: 20px;
+}
 
 .todos-list .incomplete .btn {
     opacity: 50%
@@ -53,21 +56,23 @@
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-check-circle-fill' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z'/%3E%3C/svg%3E");
         }
 
-.todos-list input.title {
+.todos-list ::deep input.title {
     border-color: #00000000;
+    box-shadow: none;
 }
 
-    .todos-list .incomplete input.title:hover,
-    .todos-list .incomplete input.title:focus {
-        border-color: rgb(206, 212, 218);
-    }
+.todos-list ::deep .incomplete input.title:hover,
+.todos-list ::deep .incomplete input.title:focus {
+    border-color: rgb(206, 212, 218);
+    box-shadow: none;
+}
 
-    .todos-list .complete input.title {
-        background-color: #00000000;
-    }
+.todos-list ::deep .complete input.title {
+    background-color: #00000000;
+}
 
-    .todos-list .complete input.title:focus,
-    .todos-list .complete input.title:active {
+    .todos-list ::deep .complete input.title:focus,
+    .todos-list ::deep .complete input.title:active {
         background-color: #00000000;
         outline-color: #00000000;
     }

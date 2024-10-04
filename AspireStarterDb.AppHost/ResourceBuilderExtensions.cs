@@ -5,71 +5,75 @@ namespace AspireStarterDb.AppHost;
 internal static class ResourceBuilderExtensions
 {
     /// <summary>
-    /// Adds a <see cref="HealthChecks.Uris.UriHealthCheck"/> to the resource that checks the endpoint named 'https'.
+    /// Adds a command to the resource that sends an HTTP request to the specified path.
     /// </summary>
-    public static IResourceBuilder<TResource> WithHttpsHealthCheck<TResource>(this IResourceBuilder<TResource> builder, string? path = null)
+    public static IResourceBuilder<TResource> WithHttpsCommand<TResource>(this IResourceBuilder<TResource> builder,
+        string path,
+        string displayName,
+        HttpMethod? method = default,
+        string? endpointName = default,
+        string? iconName = default)
         where TResource : IResourceWithEndpoints
-        => WithUriHealthCheck(builder, "https", path);
+        => WithHttpCommandImpl(builder, path, displayName, endpointName ?? "https", method, "https", iconName);
 
     /// <summary>
-    /// Adds a <see cref="HealthChecks.Uris.UriHealthCheck"/> to the resource that checks the endpoint named 'http'.
+    /// Adds a command to the resource that sends an HTTP request to the specified path.
     /// </summary>
-    public static IResourceBuilder<TResource> WithHttpHealthCheck<TResource>(this IResourceBuilder<TResource> builder, string? path = null)
+    public static IResourceBuilder<TResource> WithHttpCommand<TResource>(this IResourceBuilder<TResource> builder,
+        string path,
+        string displayName,
+        HttpMethod? method = default,
+        string? endpointName = default,
+        string? iconName = default)
         where TResource : IResourceWithEndpoints
-        => WithUriHealthCheck(builder, "http", path);
+        => WithHttpCommandImpl(builder, path, displayName, endpointName ?? "http", method, "http", iconName);
 
-#pragma warning disable ASPIREEVENTING001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
-    /// <summary>
-    /// Adds a <see cref="HealthChecks.Uris.UriHealthCheck"/> to the resource that checks the endpoint with the specified name.
-    /// </summary>
-    /// <remarks>
-    /// Only HTTP-based endpoints are supported. The endpoint must have a scheme of 'http' or 'https'.
-    /// </remarks>
-    public static IResourceBuilder<TResource> WithUriHealthCheck<TResource>(this IResourceBuilder<TResource> builder, string endpointName, string? path = null)
+    private static IResourceBuilder<TResource> WithHttpCommandImpl<TResource>(this IResourceBuilder<TResource> builder,
+        string path,
+        string displayName,
+        string endpointName,
+        HttpMethod? method,
+        string expectedScheme,
+        string? iconName = default)
         where TResource : IResourceWithEndpoints
     {
+        method ??= HttpMethod.Post;
+
         var endpoints = builder.Resource.GetEndpoints();
         var endpoint = endpoints.FirstOrDefault(e => string.Equals(e.EndpointName, endpointName, StringComparison.OrdinalIgnoreCase))
-            ?? throw new DistributedApplicationException($"Could not add URI health check for resource '{builder.Resource.Name}' as no endpoint named '{endpointName}' was found.");
+            ?? throw new DistributedApplicationException($"Could not create HTTP command for resource '{builder.Resource.Name}' as no endpoint named '{endpointName}' was found.");
 
-        var healthCheckName = string.IsNullOrWhiteSpace(path)
-            ? $"{builder.Resource.Name} {endpointName} health check"
-            : $"{builder.Resource.Name} {endpointName} {path} health check";
+        var commandType = $"http-{method.Method.ToLowerInvariant()}-request";
 
-        builder.WithHealthCheck(healthCheckName);
-
-        Uri? uri = null;
-
-        var sub = builder.ApplicationBuilder.Eventing.Subscribe<AfterEndpointsAllocatedEvent>((e, ct) =>
+        builder.WithCommand(commandType, displayName, async context =>
         {
-            if (!string.Equals(endpoint.Scheme, "https", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(endpoint.Scheme, "http", StringComparison.OrdinalIgnoreCase))
+            if (!endpoint.IsAllocated)
             {
-                throw new DistributedApplicationException(
-                    $"Could not add URI health check for endpoint named '{endpointName}' on resource '{builder.Resource.Name}'. Only HTTP-based endpoints are supported.");
+                return new ExecuteCommandResult { Success = false, ErrorMessage = "Endpoints are not yet allocated." };
             }
 
-            var uriBuilder = new UriBuilder(endpoint.Url);
-
-            if (!string.IsNullOrWhiteSpace(path))
+            if (string.Equals(endpoint.Scheme, expectedScheme, StringComparison.OrdinalIgnoreCase))
             {
-                uriBuilder.Path = path;
+                return new ExecuteCommandResult { Success = false, ErrorMessage = $"The endpoint named '{endpointName}' on resource '{builder.Resource.Name}' does not have the expected scheme of '{expectedScheme}'." };
             }
-            uri = uriBuilder.Uri;
 
-            return Task.CompletedTask;
-        });
-
-        builder.ApplicationBuilder.Services.AddHealthChecks()
-            .AddUrlGroup(name: healthCheckName, uriOptions: options =>
+            var uri = new UriBuilder(endpoint.Url) { Path = path }.Uri;
+            var httpClient = context.ServiceProvider.GetRequiredService<IHttpClientFactory>().CreateClient();
+            var request = new HttpRequestMessage(method, uri);
+            try
             {
-                if (uri is not null)
-                {
-                    options.AddUri(uri);
-                }
-            });
+                var response = await httpClient.SendAsync(request, context.CancellationToken);
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                return new ExecuteCommandResult { Success = false, ErrorMessage = ex.Message };
+            }
+            return new ExecuteCommandResult { Success = true };
+        },
+        iconName: iconName,
+        iconVariant: IconVariant.Regular);
 
         return builder;
     }
-#pragma warning restore ASPIREEVENTING001
 }
