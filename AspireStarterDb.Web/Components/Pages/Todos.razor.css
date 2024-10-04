@@ -15,9 +15,8 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-circle' viewBox='0 0 16 16'%3E%3Cpath d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16'/%3E%3C/svg%3E");
 }
 
-.btn-toggle-complete {
-    width: 1.2em;
-    height: 1.2em;
+.bi-check-lg {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='green' class='bi bi-check-lg' viewBox='0 0 16 16'%3E%3Cpath d='M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z'/%3E%3C/svg%3E");
 }
 
 .complete {
@@ -44,15 +43,15 @@
     padding-left: 20px;
 }
 
-.todos-list .incomplete .btn {
+.todos-list .incomplete .btn-toggle-complete {
     opacity: 50%
 }
 
-    .todos-list .incomplete .btn:hover {
+    .todos-list .incomplete .btn-toggle-complete:hover {
         opacity: 60%;
     }
 
-        .todos-list .incomplete .btn:hover .bi {
+        .todos-list .incomplete .btn-toggle-complete:hover .bi {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-check-circle-fill' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z'/%3E%3C/svg%3E");
         }
 
@@ -75,4 +74,20 @@
     .todos-list ::deep .complete input.title:active {
         background-color: #00000000;
         outline-color: #00000000;
+    }
+
+.todos-list .btn-save {
+    visibility: hidden;
+    transform: translateX(-30px) translateY(-50%) !important;
+}
+
+    .todos-list .btn-save .bi {
+        width: 1.8rem;
+        height: 1.8rem;
+    }
+
+    .todos-list .btn-save:focus,
+    .todos-list .btn-save:active,
+    input.title:focus + .btn-save {
+        visibility: visible !important;
     }

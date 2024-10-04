@@ -68,14 +68,20 @@ else
                     <div class="row align-items-center">
                         <input type="hidden" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Id))" @bind-value="todo.Id" />
                         <div class="col-auto g-1">
-                            <button type="submit" class="btn" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.IsComplete))"
+                            <button type="submit" class="btn btn-toggle-complete" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.IsComplete))"
                                     value="@completedButton.Value" title="@completedButton.Title">
                                 <i class="bi @completedButton.Icon"></i>
                             </button>
                         </div>
                         <div class="col g-1">
-                            <input type="text" class="@editContext.GetFieldClass(() => todo.Title)" readonly="@todo.IsComplete"
-                                   name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Title))" @bind-value="todo.Title" />
+                            <div class="position-relative">
+                                <input type="text" class="@editContext.GetFieldClass(() => todo.Title)" readonly="@todo.IsComplete"
+                                       name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Title))" @bind-value="todo.Title" />
+                                <button type="submit" class="btn btn-save position-absolute top-50 start-100 translate-middle-y"
+                                        title="Save Changes" aria-label="Save changes">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="col-auto g-1">
                             <button type="submit" class="btn-close"
