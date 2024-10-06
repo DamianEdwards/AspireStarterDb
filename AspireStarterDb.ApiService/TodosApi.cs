@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using AspireStarterDb.ApiDbModel;
 using AspireStarterDb.ApiService;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -19,25 +20,13 @@ public static class TodosApi
         {
             if (todo.Id != 0)
             {
-                return Results.Problem("Id must not be specified when creating a new todo.", statusCode: StatusCodes.Status400BadRequest);
+                return Results.Problem($"{nameof(Todo.Id)} must not be specified when creating a new todo.",
+                    statusCode: StatusCodes.Status400BadRequest);
             }
 
-            if (!ApiValidator.IsValid(todo, out var validationErrors))
+            if (todo.CreatedOn != default)
             {
-                return Results.ValidationProblem(validationErrors);
-            }
-
-            db.Todos.Add(todo);
-            await db.SaveChangesAsync();
-
-            return Results.Created($"{prefix}/{todo.Id}", todo);
-        });
-
-        todos.MapPut("/{id:int}", async (int id, Todo todo, TodosDbContext db) =>
-        {
-            if (id != todo.Id)
-            {
-                return Results.Problem($"Id in the path ({id}) does not match the Id in the body ({todo.Id}).",
+                return Results.Problem($"{nameof(Todo.CreatedOn)} must not be specified when creating a new todo. This value is automatically set.",
                     statusCode: StatusCodes.Status400BadRequest);
             }
 
@@ -46,23 +35,54 @@ public static class TodosApi
                 return Results.ValidationProblem(validationErrors);
             }
 
-            var affected = await db.Todos
+            db.Todos.Add(todo);
+
+            try
+            {
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                if (ex.InnerException?.Message?.Contains(TodosDbContext.TodosNameUniqueIndex, StringComparison.InvariantCultureIgnoreCase) == true)
+                {
+                    return Results.Conflict(new ProblemDetails { Detail = $"A todo with that {nameof(Todo.Title)} already exists." });
+                }
+                throw;
+            }
+
+            return Results.Created($"{prefix}/{todo.Id}", todo);
+        });
+
+        todos.MapPut("/{id:int}", async (int id, Todo todo, TodosDbContext db) =>
+        {
+            if (id != todo.Id)
+            {
+                return Results.Problem($"{nameof(Todo.Id)} in the path ({id}) does not match the {nameof(Todo.Id)} in the body ({todo.Id}).",
+                    statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            if (!ApiValidator.IsValid(todo, out var validationErrors))
+            {
+                return Results.ValidationProblem(validationErrors);
+            }
+
+            var rowsUpdated = await db.Todos
                 .Where(model => model.Id == id)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(t => t.Title, todo.Title)
-                    .SetProperty(t => t.IsComplete, todo.IsComplete)
+                    .SetProperty(t => t.CompletedOn, todo.CompletedOn)
                 );
 
-            return affected == 1 ? Results.NoContent() : Results.NotFound();
+            return rowsUpdated == 1 ? Results.NoContent() : Results.NotFound();
         });
 
         todos.MapDelete("/{id:int}", async (int id, TodosDbContext db) =>
         {
-            var affected = await db.Todos
+            var rowsDeleted = await db.Todos
                 .Where(todo => todo.Id == id)
                 .ExecuteDeleteAsync();
 
-            return affected == 1 ? Results.NoContent() : Results.NotFound();
+            return rowsDeleted == 1 ? Results.NoContent() : Results.NotFound();
         });
 
         return app;

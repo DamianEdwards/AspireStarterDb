@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -17,12 +18,25 @@ namespace AspireStarterDb.ApiDbService.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Title = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    IsComplete = table.Column<bool>(type: "bit", nullable: false)
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CompletedOn = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Todos", x => x.Id);
+                    table.CheckConstraint("CK_CompletedOn", "[CompletedOn] = NULL OR [CompletedOn] > [CreatedOn]");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Todos_CreatedOn",
+                table: "Todos",
+                column: "CreatedOn");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Todos_Name",
+                table: "Todos",
+                columns: new[] { "Title", "CompletedOn" },
+                unique: true);
         }
 
         /// <inheritdoc />

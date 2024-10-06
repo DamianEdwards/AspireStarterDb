@@ -39,7 +39,7 @@ public class TodosApiClient(HttpClient httpClient)
         return response.StatusCode switch
         {
             HttpStatusCode.Created => (true, await response.Content.ReadFromJsonAsync<Todo>(cancellationToken), null),
-            HttpStatusCode.BadRequest => (false, default, await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken)),
+            HttpStatusCode.BadRequest or HttpStatusCode.Conflict => (false, default, await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken)),
             _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
         };
     }
@@ -51,7 +51,7 @@ public class TodosApiClient(HttpClient httpClient)
         return response.StatusCode switch
         {
             HttpStatusCode.NoContent => (true, null),
-            HttpStatusCode.BadRequest => (false, await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken)),
+            HttpStatusCode.BadRequest or HttpStatusCode.Conflict => (false, await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken)),
             _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
         };
     }
@@ -76,5 +76,9 @@ public class Todo
     [Required]
     public string? Title { get; set; }
 
-    public bool IsComplete { get; set; }
+    public DateTime CreatedOn { get; }
+
+    public DateTime? CompletedOn { get; set; }
+
+    public bool IsComplete => CompletedOn.HasValue;
 }

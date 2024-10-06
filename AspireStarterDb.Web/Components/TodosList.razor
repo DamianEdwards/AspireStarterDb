@@ -37,7 +37,7 @@ else
                     <div class="row align-items-center">
                         <input type="hidden" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Id))" @bind-value="todo.Id" />
                         <div class="col-auto g-1">
-                            <button type="submit" class="btn btn-toggle-complete" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.IsComplete))"
+                            <button type="submit" class="btn btn-toggle-complete" name="@(nameof(SetComplete))"
                                     value="@completedButton.Value" title="@completedButton.Title">
                                 <i class="bi @completedButton.Icon"></i>
                             </button>
@@ -81,6 +81,9 @@ else
     private Todo? UpdatingTodo { get; set; }
 
     [SupplyParameterFromForm]
+    private bool? SetComplete { get; set; }
+
+    [SupplyParameterFromForm]
     private bool IsDeleting { get; set; }
 
     [Parameter]
@@ -107,13 +110,21 @@ else
             }
             else
             {
-                // Update the model on the EditContext with the changes from the form
                 var contextTodo = (Todo)editContext.Model;
+                UpdatingTodo.CompletedOn = SetComplete switch
+                {
+                    null => contextTodo.CompletedOn,
+                    true => DateTime.UtcNow,
+                    false => null,
+                };
+
+                // Update the model on the EditContext with the changes from the form
                 contextTodo.Title = UpdatingTodo.Title;
+                contextTodo.CompletedOn = UpdatingTodo.CompletedOn;
 
                 if (editContext.Validate())
                 {
-                    var (wasUpdated, validationProblem) = await TodosApi.UpdateTodoAsync(UpdatingTodo);
+                    var (wasUpdated, validationProblem) = await TodosApi.UpdateTodoAsync(contextTodo);
                     if (!wasUpdated)
                     {
                         messageStore.AddValidationErrors(editContext, validationProblem);
