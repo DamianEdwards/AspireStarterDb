@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using AspireStarterDb.ApiDbModel;
 using AspireStarterDb.ApiService;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Microsoft.Extensions.Hosting;
 
@@ -41,11 +41,11 @@ public static class TodosApi
             {
                 await db.SaveChangesAsync();
             }
-            catch (DbUpdateException ex)
+            catch (Exception ex)
             {
-                if (ex.InnerException?.Message?.Contains(TodosDbContext.TodosNameUniqueIndex, StringComparison.InvariantCultureIgnoreCase) == true)
+                if (TryHandleDatabaseException(ex, out var result))
                 {
-                    return Results.Conflict(new ProblemDetails { Detail = $"A todo with that {nameof(Todo.Title)} already exists." });
+                    return result;
                 }
                 throw;
             }
@@ -66,14 +66,24 @@ public static class TodosApi
                 return Results.ValidationProblem(validationErrors);
             }
 
-            var rowsUpdated = await db.Todos
-                .Where(model => model.Id == id)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(t => t.Title, todo.Title)
-                    .SetProperty(t => t.CompletedOn, todo.CompletedOn)
-                );
-
-            return rowsUpdated == 1 ? Results.NoContent() : Results.NotFound();
+            try
+            {
+                var rowsUpdated = await db.Todos
+                    .Where(model => model.Id == id)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(t => t.Title, todo.Title)
+                        .SetProperty(t => t.CompletedOn, todo.CompletedOn)
+                    );
+                return rowsUpdated == 1 ? Results.NoContent() : Results.NotFound();
+            }
+            catch (Exception ex)
+            {
+                if (TryHandleDatabaseException(ex, out var result))
+                {
+                    return result;
+                }
+                throw;
+            }
         });
 
         todos.MapDelete("/{id:int}", async (int id, TodosDbContext db) =>
@@ -86,5 +96,25 @@ public static class TodosApi
         });
 
         return app;
+    }
+
+    private static bool TryHandleDatabaseException(Exception exception, out IResult? result)
+    {
+        var ex = exception.InnerException ?? exception;
+
+        if (
+            // SQL Server
+            ex is SqlException { Number: 2601 } // Unique violation: https://learn.microsoft.com/sql/relational-databases/replication/mssql-eng002601
+            // PostgreSQL
+            //ex is NpgsqlException { SqlState: PostgresErrorCodes.UniqueViolation }
+            && ex.Message.Contains(TodosDbContext.TodosUniqueIndex, StringComparison.InvariantCultureIgnoreCase))
+        {
+            result = Results.Conflict(new HttpValidationProblemDetails(
+                [new(nameof(Todo.Title), [$"A todo with that {nameof(Todo.Title)} already exists."])]));
+            return true;
+        }
+
+        result = null;
+        return false;
     }
 }

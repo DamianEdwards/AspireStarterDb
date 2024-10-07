@@ -34,8 +34,10 @@ else
                     @* First submit button is the default used when Enter is pressed to submit the form even if hidden *@
                     <input type="submit" class="d-none" />
 
+                    <input type="hidden" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Id))" @bind-value="todo.Id" />
+                    <input type="hidden" name="@(nameof(SetCompleteOverride))" value="@(SetCompleteOverride.ToString().ToLowerInvariant())" />
+
                     <div class="row align-items-center">
-                        <input type="hidden" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Id))" @bind-value="todo.Id" />
                         <div class="col-auto g-1">
                             <button type="submit" class="btn btn-toggle-complete" name="@(nameof(SetComplete))"
                                     value="@completedButton.Value" title="@completedButton.Title">
@@ -61,8 +63,8 @@ else
                         </div>
                     </div>
                     <div class="row validation">
-                        <ValidationMessage For="() => todo.Title" />
-                        <ValidationMessage For="() => todo" />
+                        <ValidationSummary class="validation-errors mt-1 mb-0" />
+                        <ValidationSummary Model="todo" class="validation-errors mt-1 mb-0" />
                     </div>
                 </EditForm>
             </div>
@@ -76,12 +78,14 @@ else
     private Dictionary<int, EditContext> updateEditContexts = new();
     private Dictionary<int, ValidationMessageStore> updateMessageStores = new();
     private Todo[]? todos;
-
     [SupplyParameterFromForm]
     private Todo? UpdatingTodo { get; set; }
 
     [SupplyParameterFromForm]
     private bool? SetComplete { get; set; }
+
+    [SupplyParameterFromForm]
+    private bool SetCompleteOverride { get; set; }
 
     [SupplyParameterFromForm]
     private bool IsDeleting { get; set; }
@@ -118,6 +122,12 @@ else
                     false => null,
                 };
 
+                // Handle case of validation error when attepmting to clear the completion state, e.g. non-unique title
+                if (SetCompleteOverride && SetComplete != true)
+                {
+                    UpdatingTodo.CompletedOn = null;
+                }
+
                 // Update the model on the EditContext with the changes from the form
                 contextTodo.Title = UpdatingTodo.Title;
                 contextTodo.CompletedOn = UpdatingTodo.CompletedOn;
@@ -128,6 +138,7 @@ else
                     if (!wasUpdated)
                     {
                         messageStore.AddValidationErrors(editContext, validationProblem);
+                        SetCompleteOverride = true;
                         return;
                     }
                 }

@@ -4,7 +4,7 @@ namespace AspireStarterDb.ApiDbModel;
 
 public class TodosDbContext(DbContextOptions<TodosDbContext> options) : DbContext(options)
 {
-    public const string TodosNameUniqueIndex = "IX_Todos_Name";
+    public const string TodosUniqueIndex = $"IX_{nameof(Todos)}_Unique";
 
     public DbSet<Todo> Todos { get; set; }
 
@@ -13,18 +13,16 @@ public class TodosDbContext(DbContextOptions<TodosDbContext> options) : DbContex
         var todoBuilder = modelBuilder.Entity<Todo>()
             .ToTable(b => b.HasCheckConstraint("CK_CompletedOn",
                 // SQL Server
-                $"[{nameof(Todo.CompletedOn)}] = NULL OR [{nameof(Todo.CompletedOn)}] > [{nameof(Todo.CreatedOn)}]"))
+                $"[{nameof(Todo.CompletedOn)}] = NULL OR [{nameof(Todo.CompletedOn)}] > [{nameof(Todo.CreatedOn)}]"));
                 // PostgreSQL
-                //$"\"{nameof(Todo.CompletedOn)}\" IS NULL OR \"{nameof(Todo.CompletedOn)}\" > \"{nameof(Todo.CreatedOn)}\""))
-                ;
-        todoBuilder.HasIndex(e => new { e.Title, e.CompletedOn }, TodosNameUniqueIndex)
+                //$"\"{nameof(Todo.CompletedOn)}\" IS NULL OR \"{nameof(Todo.CompletedOn)}\" > \"{nameof(Todo.CreatedOn)}\""));
+        todoBuilder.HasIndex(e => new { e.Title, e.CompletedOn }, TodosUniqueIndex)
             .IsUnique().HasFilter(null);
         todoBuilder.Property(t => t.CreatedOn)
             // SQL Server
-            .HasDefaultValueSql("GETUTCDATE()")
+            .HasDefaultValueSql("GETUTCDATE()");
             // PostgreSQL
-            //.HasDefaultValueSql("CURRENT_TIMESTAMP")
-            ;
+            //.HasDefaultValueSql("CURRENT_TIMESTAMP");
     }
 
     public static async Task SeedAsync(DbContext dbContext, bool storeManagementPerformed, CancellationToken cancellationToken)

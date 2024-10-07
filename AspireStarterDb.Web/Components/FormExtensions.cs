@@ -25,9 +25,10 @@ public static class FormExtensions
         }
         else
         {
-            // This doesn't work :(
             store.Add(new FieldIdentifier(editContext.Model, fieldName: string.Empty), validationProblemDetails.Detail ?? "An error occurred");
         }
+
+        editContext.NotifyValidationStateChanged();
     }
 
     /// <summary>
