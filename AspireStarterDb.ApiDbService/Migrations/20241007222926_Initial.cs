@@ -33,7 +33,7 @@ namespace AspireStarterDb.ApiDbService.Migrations
                 column: "CreatedOn");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Todos_Name",
+                name: "IX_Todos_Unique",
                 table: "Todos",
                 columns: new[] { "Title", "CompletedOn" },
                 unique: true);

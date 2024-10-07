@@ -47,7 +47,7 @@ namespace AspireStarterDb.ApiDbService.Migrations
 
                     b.HasIndex("CreatedOn");
 
-                    b.HasIndex(new[] { "Title", "CompletedOn" }, "IX_Todos_Name")
+                    b.HasIndex(new[] { "Title", "CompletedOn" }, "IX_Todos_Unique")
                         .IsUnique();
 
                     b.ToTable("Todos", t =>

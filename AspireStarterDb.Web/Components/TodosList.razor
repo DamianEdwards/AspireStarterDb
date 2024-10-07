@@ -35,7 +35,6 @@ else
                     <input type="submit" class="d-none" />
 
                     <input type="hidden" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Id))" @bind-value="todo.Id" />
-                    <input type="hidden" name="@(nameof(SetCompleteOverride))" value="@(SetCompleteOverride.ToString().ToLowerInvariant())" />
 
                     <div class="row align-items-center">
                         <div class="col-auto g-1">
@@ -85,9 +84,6 @@ else
     private bool? SetComplete { get; set; }
 
     [SupplyParameterFromForm]
-    private bool SetCompleteOverride { get; set; }
-
-    [SupplyParameterFromForm]
     private bool IsDeleting { get; set; }
 
     [Parameter]
@@ -122,14 +118,9 @@ else
                     false => null,
                 };
 
-                // Handle case of validation error when attepmting to clear the completion state, e.g. non-unique title
-                if (SetCompleteOverride && SetComplete != true)
-                {
-                    UpdatingTodo.CompletedOn = null;
-                }
-
                 // Update the model on the EditContext with the changes from the form
                 contextTodo.Title = UpdatingTodo.Title;
+                var originalCompletedOn = contextTodo.CompletedOn;
                 contextTodo.CompletedOn = UpdatingTodo.CompletedOn;
 
                 if (editContext.Validate())
@@ -138,7 +129,11 @@ else
                     if (!wasUpdated)
                     {
                         messageStore.AddValidationErrors(editContext, validationProblem);
-                        SetCompleteOverride = true;
+                        if (SetComplete == false)
+                        {
+                            // Unable to set as incomplete so reset to the original state
+                            contextTodo.CompletedOn = originalCompletedOn;
+                        }
                         return;
                     }
                 }

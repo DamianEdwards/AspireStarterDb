@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AspireStarterDb.ApiDbService.Migrations
 {
     [DbContext(typeof(TodosDbContext))]
-    [Migration("20241006002200_Initial")]
+    [Migration("20241007222926_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -50,7 +50,7 @@ namespace AspireStarterDb.ApiDbService.Migrations
 
                     b.HasIndex("CreatedOn");
 
-                    b.HasIndex(new[] { "Title", "CompletedOn" }, "IX_Todos_Name")
+                    b.HasIndex(new[] { "Title", "CompletedOn" }, "IX_Todos_Unique")
                         .IsUnique();
 
                     b.ToTable("Todos", t =>
