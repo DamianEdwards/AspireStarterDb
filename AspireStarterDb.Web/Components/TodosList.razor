@@ -4,7 +4,7 @@
 @if (todos == null)
 {
     // Show a loading placeholder while the data is being fetched
-    <div class="list-group list-group-flush col-12 col-lg-10 col-xl-8">
+    <div class="list-group list-group-flush col-12 col-lg-10 col-xl-8 todos-list-placeholder">
         @for (var i = 0; i < 5; i++)
         {
             <div class="list-group-item placeholder-glow"><span class="placeholder col-4"></span></div>
@@ -38,7 +38,7 @@ else
 
                     <div class="row align-items-center">
                         <div class="col-auto g-1">
-                            <button type="submit" class="btn btn-toggle-complete" name="@(nameof(SetComplete))"
+                            <button type="submit" class="btn btn-set-complete" name="@(nameof(SetComplete))"
                                     value="@completedButton.Value" title="@completedButton.Title">
                                 <i class="bi @completedButton.Icon"></i>
                             </button>
@@ -53,12 +53,16 @@ else
                                             title="Save Changes" aria-label="Save changes">
                                         <i class="bi bi-check-lg"></i>
                                     </button>
+                                    <a href="todos" class="btn btn-close position-absolute top-50 start-100 translate-middle-y"
+                                       title="Cancel Changes" aria-label="Cancel changes"></a>
                                 }
                             </div>
                         </div>
                         <div class="col-auto g-1">
-                            <button type="submit" class="btn-close"
-                                    name="@nameof(IsDeleting)" value="true" title="Delete" aria-label="Delete"></button>
+                            <button type="submit" class="btn btn-delete"
+                                    name="@nameof(IsDeleting)" value="true" title="Delete" aria-label="Delete">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="row validation">
@@ -111,34 +115,36 @@ else
             else
             {
                 var contextTodo = (Todo)editContext.Model;
-                UpdatingTodo.CompletedOn = SetComplete switch
+
+                // Update the model on the EditContext with the changes from the form
+                contextTodo.Title = UpdatingTodo.Title;
+                var originalCompletedOn = contextTodo.CompletedOn;
+                contextTodo.CompletedOn = SetComplete switch
                 {
                     null => contextTodo.CompletedOn,
                     true => DateTime.UtcNow,
                     false => null,
                 };
 
-                // Update the model on the EditContext with the changes from the form
-                contextTodo.Title = UpdatingTodo.Title;
-                var originalCompletedOn = contextTodo.CompletedOn;
-                contextTodo.CompletedOn = UpdatingTodo.CompletedOn;
+                var isValid = editContext.Validate();
 
-                if (editContext.Validate())
+                if (isValid)
                 {
                     var (wasUpdated, validationProblem) = await TodosApi.UpdateTodoAsync(contextTodo);
                     if (!wasUpdated)
                     {
                         messageStore.AddValidationErrors(editContext, validationProblem);
-                        if (SetComplete == false)
-                        {
-                            // Unable to set as incomplete so reset to the original state
-                            contextTodo.CompletedOn = originalCompletedOn;
-                        }
-                        return;
+                        isValid = false;
                     }
                 }
-                else
+
+                if (!isValid)
                 {
+                    if (SetComplete.HasValue)
+                    {
+                        // Unable to set complete/incomplete so reset to the original state
+                        contextTodo.CompletedOn = originalCompletedOn;
+                    }
                     return;
                 }
             }
@@ -149,7 +155,7 @@ else
     private (EditContext, ValidationMessageStore) GetFormContext(Todo todo)
     {
         var editContext = updateEditContexts.TryGetValue(todo.Id, out var ec) ? ec : new(todo);
-        var messageStore = updateMessageStores.TryGetValue(todo.Id, out var ms) ? ms : new ValidationMessageStore(editContext);
+        var messageStore = updateMessageStores.TryGetValue(todo.Id, out var ms) ? ms : new(editContext);
         updateEditContexts.TryAdd(todo.Id, editContext);
         updateMessageStores.TryAdd(todo.Id, messageStore);
         return (editContext, messageStore);

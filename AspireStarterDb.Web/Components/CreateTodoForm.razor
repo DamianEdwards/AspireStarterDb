@@ -8,7 +8,8 @@
         <div class="col-7">
             <div class="form-floating">
                 <InputText @bind-Value="CreatingTodo!.Title" id="title"
-                           class="@createEditContext.GetFieldClass(() => CreatingTodo!.Title)" placeholder="" />
+                           class="@createEditContext.GetFieldClass(() => CreatingTodo!.Title)"
+                           placeholder="What do you need to do?" />
                 <label for="title">What do you need to do?</label>
             </div>
         </div>

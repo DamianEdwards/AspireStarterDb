@@ -19,20 +19,28 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='green' class='bi bi-check-lg' viewBox='0 0 16 16'%3E%3Cpath d='M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z'/%3E%3C/svg%3E");
 }
 
+.bi-trash-fill {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='red' class='bi bi-trash-fill' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0'/%3E%3C/svg%3E");
+}
+
 .complete input {
     text-decoration: line-through;
 }
 
+.todos-list-placeholder {
+    opacity: 0; /* Initially invisible */
+    animation: fadeIn 0.5s forwards; /* Apply the animation */
+    animation-delay: 0.5s; /* Delay the animation */
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1; /* Final state: fully visible */
+    }
+}
+
 .todos-list .btn {
     padding: 0;
-}
-
-.todos-list .btn-close {
-    visibility: hidden;
-}
-
-.todos-list .list-group-item:hover .btn-close {
-    visibility: visible;
 }
 
 .todos-list .row.validation {
@@ -40,18 +48,18 @@
 }
 
 .todos-list .incomplete .item-container {
-    padding-right: 2.0em;
+    padding-right: 4.0em;
 }
 
-.todos-list .incomplete .btn-toggle-complete {
+.todos-list .incomplete .btn-set-complete {
     opacity: 50%
 }
 
-    .todos-list .incomplete .btn-toggle-complete:hover {
+    .todos-list .incomplete .btn-set-complete:hover {
         opacity: 60%;
     }
 
-        .todos-list .incomplete .btn-toggle-complete:hover .bi {
+        .todos-list .incomplete .btn-set-complete:hover .bi {
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-check-circle-fill' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z'/%3E%3C/svg%3E");
         }
 
@@ -60,10 +68,10 @@
     box-shadow: none;
 }
 
-.todos-list ::deep input.title.is-invalid {
-    border-color: #dc3545 !important;
-    box-shadow: none;
-}
+    .todos-list ::deep input.title.is-invalid {
+        border-color: var(--bs-form-invalid-border-color) !important;
+        box-shadow: none;
+    }
 
 .todos-list ::deep .incomplete input.title:hover,
 .todos-list ::deep .incomplete input.title:focus {
@@ -86,17 +94,30 @@
         background-image: none !important;
     }
 
-.todos-list .btn-save {
+.todos-list .btn-save, .todos-list .btn-delete, .todos-list .btn-close {
     visibility: hidden;
-    transform: translateX(-30px) translateY(-50%) !important;
 }
 
-    .todos-list .btn-save .bi {
+.todos-list .btn-save {
+    transform: translateX(-60px) translateY(-50%) !important;
+}
+
+    .todos-list .btn-save .bi,
+    .todos-list .btn-close {
         width: 1.8rem;
         height: 1.8rem;
     }
 
+.todos-list .btn-close {
+    transform: translateX(-30px) translateY(-50%) !important;
+}
+
+.todos-list .list-group-item:hover .btn-delete {
+    visibility: visible;
+}
+
 .todos-list .incomplete form:focus-within .btn-save,
-.todos-list .incomplete form:focus-within .btn-close {
+.todos-list .incomplete form:focus-within .btn-close,
+.todos-list .incomplete form:focus-within .btn-delete {
     visibility: visible !important;
 }
