@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace AspireStarterDb.ApiDbModel;
 
+[Index(nameof(CreatedOn))]
 public class Todo
 {
     public int Id { get; set; }
@@ -10,5 +12,9 @@ public class Todo
     [StringLength(1000)]
     public required string Title { get; set; }
 
-    public bool IsComplete { get; set; }
+    public DateTime CreatedOn { get; }
+
+    public DateTime? CompletedOn { get; set; }
+
+    public bool IsComplete => CompletedOn.HasValue;
 }

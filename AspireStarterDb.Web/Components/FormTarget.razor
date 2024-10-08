@@ -1,0 +1,9 @@
+﻿<form @formname="@Name" @onsubmit="@OnSubmit" class="d-none"></form>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Name { get; set; }
+
+    [Parameter]
+    public EventCallback<EventArgs> OnSubmit { get; set; }
+}
