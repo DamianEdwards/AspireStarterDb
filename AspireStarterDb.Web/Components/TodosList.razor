@@ -44,7 +44,7 @@ else
                             </button>
                         </div>
                         <div class="col g-1">
-                            <div class="position-relative item-container">
+                            <div class="position-relative edit-controls">
                                 <input type="text" class="@editContext.GetFieldClass(() => todo.Title)" readonly="@todo.IsComplete"
                                        name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Title))" @bind-value="todo.Title" />
                                 @if (!todo.IsComplete)

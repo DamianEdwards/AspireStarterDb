@@ -47,7 +47,7 @@
     padding-left: 20px;
 }
 
-.todos-list .incomplete .item-container {
+.todos-list .incomplete .edit-controls {
     padding-right: 4.0em;
 }
 
@@ -116,8 +116,8 @@
     visibility: visible;
 }
 
-.todos-list .incomplete form:focus-within .btn-save,
-.todos-list .incomplete form:focus-within .btn-close,
+.todos-list .incomplete .edit-controls:focus-within .btn-save,
+.todos-list .incomplete .edit-controls:focus-within .btn-close,
 .todos-list .incomplete form:focus-within .btn-delete {
     visibility: visible !important;
 }
