@@ -3,8 +3,17 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace AspireStarterDb.ApiService;
 
-internal static class ValidationHelper
+/// <summary>
+/// Helper class for validating API models using <see cref="Validator"/>.
+/// </summary>
+internal static class ApiValidator
 {
+    /// <summary>
+    /// Validates the specified object using <see cref="Validator"/>.
+    /// </summary>
+    /// <param name="target">The object to validate.</param>
+    /// <param name="validationErrors">The validation errors.</param>
+    /// <returns><see langword="true" /> if the object validates; otherwise, <see langword="false"/>.</returns>
     public static bool IsValid(object target, [NotNullWhen(false)] out Dictionary<string, string[]>? validationErrors)
     {
         var validationContext = new ValidationContext(target);

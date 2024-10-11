@@ -1,4 +1,7 @@
-﻿namespace AspireStarterDb.Web;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net;
+
+namespace AspireStarterDb.Web;
 
 public class TodosApiClient(HttpClient httpClient)
 {
@@ -26,6 +29,56 @@ public class TodosApiClient(HttpClient httpClient)
     {
         return await httpClient.GetFromJsonAsync<Todo>($"/todos/{id}", cancellationToken);
     }
+
+    public async Task<(bool WasCreated, Todo? CreatedTodo, HttpValidationProblemDetails? ProblemDetails)> CreateTodoAsync(
+        Todo todo,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PostAsJsonAsync("/todos", todo, cancellationToken);
+
+        return response.StatusCode switch
+        {
+            HttpStatusCode.Created => (true, await response.Content.ReadFromJsonAsync<Todo>(cancellationToken), null),
+            HttpStatusCode.BadRequest or HttpStatusCode.Conflict => (false, default, await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken)),
+            _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
+        };
+    }
+
+    public async Task<(bool WasUpdated, HttpValidationProblemDetails? ProblemDetails)> UpdateTodoAsync(Todo todo, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.PutAsJsonAsync($"/todos/{todo.Id}", todo, cancellationToken);
+
+        return response.StatusCode switch
+        {
+            HttpStatusCode.NoContent => (true, null),
+            HttpStatusCode.BadRequest or HttpStatusCode.Conflict => (false, await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken)),
+            _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
+        };
+    }
+
+    public async Task<bool> DeleteTodoAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var response = await httpClient.DeleteAsync($"/todos/{id}", cancellationToken);
+
+        return response.StatusCode switch
+        {
+            HttpStatusCode.NoContent => true,
+            HttpStatusCode.NotFound => false,
+            _ => throw new InvalidOperationException($"Unexpected status code returned from endpoint: {response.StatusCode}")
+        };
+    }
 }
 
-public record Todo(int Id, string Title, bool IsComplete);
+public class Todo
+{
+    public int Id { get; set; }
+
+    [Required]
+    public string? Title { get; set; }
+
+    public DateTime CreatedOn { get; }
+
+    public DateTime? CompletedOn { get; set; }
+
+    public bool IsComplete => CompletedOn.HasValue;
+}

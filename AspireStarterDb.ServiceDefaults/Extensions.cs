@@ -31,6 +31,9 @@ public static class Extensions
             http.AddServiceDiscovery();
         });
 
+        // Ensure failed background services result in a non-zero exit code
+        builder.Services.AddHostedService<BackgroundServiceObserver>();
+
         return builder;
     }
 
@@ -41,6 +44,7 @@ public static class Extensions
             logging.IncludeFormattedMessage = true;
             logging.IncludeScopes = true;
         });
+            
 
         builder.Services.AddOpenTelemetry()
             .WithMetrics(metrics =>
@@ -51,7 +55,9 @@ public static class Extensions
             })
             .WithTracing(tracing =>
             {
-                tracing.AddAspNetCoreInstrumentation()
+                tracing
+                    .AddSource(builder.Environment.ApplicationName)
+                    .AddAspNetCoreInstrumentation()
                     // Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
                     //.AddGrpcClientInstrumentation()
                     .AddHttpClientInstrumentation();
@@ -107,5 +113,24 @@ public static class Extensions
         }
 
         return app;
+    }
+
+    private class BackgroundServiceObserver(IServiceProvider serviceProvider) : IHostedService
+    {
+        public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            var backgroundServiceTasks = serviceProvider.GetServices<IHostedService>()
+                .OfType<BackgroundService>().Select(s => s.ExecuteTask);
+
+            if (backgroundServiceTasks.Any(t => t?.IsFaulted == true))
+            {
+                // If a BackgroundService failed, set the exit code to -1.
+                Environment.ExitCode = -1;
+            }
+
+            return Task.CompletedTask;
+        }
     }
 }
