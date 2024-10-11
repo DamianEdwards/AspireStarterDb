@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0-rc.1.24506.1" />
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0-rc.1.24511.1" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,7 +9,6 @@
     <Nullable>enable</Nullable>
     <IsAspireHost>true</IsAspireHost>
     <UserSecretsId>3275d53b-c465-42d8-8f85-f6fefb678ea7</UserSecretsId>
-    <DcpDir>C:\Users\dedward\Downloads\DCP 0.8.0 pr windows_amd64_build</DcpDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,10 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0-rc.1.24506.1" />
-    <PackageReference Include="Aspire.Hosting.Redis" Version="9.0.0-rc.1.24506.1" />
-    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.0.0-rc.1.24506.1" />
-    <PackageReference Include="Aspire.Hosting.SqlServer" Version="9.0.0-rc.1.24506.1" />
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0-rc.1.24511.1" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="9.0.0-rc.1.24511.1" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.0.0-rc.1.24511.1" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="9.0.0-rc.1.24511.1" />
   </ItemGroup>
 
 </Project>
