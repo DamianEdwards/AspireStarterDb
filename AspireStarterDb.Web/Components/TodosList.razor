@@ -1,0 +1,172 @@
+﻿@inject TodosApiClient TodosApi
+@inject NavigationManager Navigation
+
+@if (todos == null)
+{
+    // Show a loading placeholder while the data is being fetched
+    <div class="list-group list-group-flush col-12 col-lg-10 col-xl-8 todos-list-placeholder">
+        @for (var i = 0; i < 5; i++)
+        {
+            <div class="list-group-item placeholder-glow"><span class="placeholder col-4"></span></div>
+        }
+    </div>
+}
+else if (todos.Length == 0)
+{
+    <p class="text-information">
+        Todos list is empty! Add one using the form above.
+    </p>
+}
+else
+{
+    <div class="todos-list list-group list-group-flush col-12 col-lg-10 col-xl-8">
+        @foreach (var todo in todos)
+        {
+            var (editContext, messageStore) = GetFormContext(todo);
+            var completedButton = GetCompletedButtonAttributes(todo);
+
+            <div class="list-group-item align-items-center @(todo.IsComplete ? "complete" : "incomplete")">
+                <EditForm EditContext="editContext" Enhance class="position-relative">
+                    <DataAnnotationsValidator />
+                    @* Configure all edit forms to dispatch to the same target form handler *@
+                    <FormHandler Target="UpdateTodo" />
+
+                    @* First submit button is the default used when Enter is pressed to submit the form even if hidden *@
+                    <input type="submit" class="d-none" />
+
+                    <input type="hidden" name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Id))" @bind-value="todo.Id" />
+
+                    <div class="row align-items-center">
+                        <div class="col-auto g-1">
+                            <button type="submit" class="btn btn-set-complete" name="@(nameof(SetComplete))"
+                                    value="@completedButton.Value" title="@completedButton.Title">
+                                <i class="bi @completedButton.Icon"></i>
+                            </button>
+                        </div>
+                        <div class="col g-1">
+                            <div class="position-relative edit-controls">
+                                <input type="text" class="@editContext.GetFieldClass(() => todo.Title)" readonly="@todo.IsComplete"
+                                       name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Title))" @bind-value="todo.Title" />
+                                @if (!todo.IsComplete)
+                                {
+                                    <button type="submit" class="btn btn-save position-absolute top-50 start-100 translate-middle-y"
+                                            title="Save Changes" aria-label="Save changes">
+                                        <i class="bi bi-floppy2-fill"></i>
+                                    </button>
+                                    <a href="todos" class="btn btn-close position-absolute top-50 start-100 translate-middle-y"
+                                       title="Cancel Changes" aria-label="Cancel changes"></a>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-auto g-1">
+                            <button type="submit" class="btn btn-delete"
+                                    name="@nameof(IsDeleting)" value="true" title="Delete" aria-label="Delete">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row validation">
+                        <ValidationSummary class="validation-errors mt-1 mb-0" />
+                        <ValidationSummary Model="todo" class="validation-errors mt-1 mb-0" />
+                    </div>
+                </EditForm>
+            </div>
+        }
+        @* Target form handler for all edit forms *@
+        <FormTarget Name="UpdateTodo" OnSubmit="UpdateAsync" />
+    </div>
+}
+
+@code {
+    private Dictionary<int, EditContext> updateEditContexts = new();
+    private Dictionary<int, ValidationMessageStore> updateMessageStores = new();
+    private Todo[]? todos;
+
+    [SupplyParameterFromForm]
+    private Todo? UpdatingTodo { get; set; }
+
+    [SupplyParameterFromForm]
+    private bool? SetComplete { get; set; }
+
+    [SupplyParameterFromForm]
+    private bool IsDeleting { get; set; }
+
+    [Parameter]
+    public EventCallback OnTodosLoaded { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        todos = await TodosApi.GetTodosAsync();
+        if (OnTodosLoaded.HasDelegate)
+        {
+            await OnTodosLoaded.InvokeAsync();
+        }
+    }
+
+    private async Task UpdateAsync()
+    {
+        if (UpdatingTodo is not null
+            && updateEditContexts.TryGetValue(UpdatingTodo.Id, out var editContext)
+            && updateMessageStores.TryGetValue(UpdatingTodo.Id, out var messageStore))
+        {
+            if (IsDeleting)
+            {
+                await TodosApi.DeleteTodoAsync(UpdatingTodo.Id);
+            }
+            else
+            {
+                var contextTodo = (Todo)editContext.Model;
+
+                // Update the model on the EditContext with the changes from the form
+                contextTodo.Title = UpdatingTodo.Title;
+                var originalCompletedOn = contextTodo.CompletedOn;
+                contextTodo.CompletedOn = SetComplete switch
+                {
+                    null => contextTodo.CompletedOn,
+                    true => DateTime.UtcNow,
+                    false => null,
+                };
+
+                var isValid = editContext.Validate();
+
+                if (isValid)
+                {
+                    var (wasUpdated, validationProblem) = await TodosApi.UpdateTodoAsync(contextTodo);
+                    if (!wasUpdated)
+                    {
+                        messageStore.AddValidationErrors(editContext, validationProblem);
+                        isValid = false;
+                    }
+                }
+
+                if (!isValid)
+                {
+                    if (SetComplete.HasValue)
+                    {
+                        // Unable to set complete/incomplete so reset to the original state
+                        contextTodo.CompletedOn = originalCompletedOn;
+                    }
+                    return;
+                }
+            }
+        }
+        Navigation.Refresh();
+    }
+
+    private (EditContext, ValidationMessageStore) GetFormContext(Todo todo)
+    {
+        var editContext = updateEditContexts.TryGetValue(todo.Id, out var ec) ? ec : new(todo);
+        var messageStore = updateMessageStores.TryGetValue(todo.Id, out var ms) ? ms : new(editContext);
+        updateEditContexts.TryAdd(todo.Id, editContext);
+        updateMessageStores.TryAdd(todo.Id, messageStore);
+        return (editContext, messageStore);
+    }
+
+    private (string Icon, string Title, string Value) GetCompletedButtonAttributes(Todo todo)
+    {
+        var icon = todo.IsComplete ? "bi-check-circle-fill" : "bi-circle";
+        var title = todo.IsComplete ? "Mark incomplete" : "Mark complete";
+        var value = (todo.IsComplete ? bool.FalseString : bool.TrueString).ToLowerInvariant();
+        return (icon, title, value);
+    }
+}

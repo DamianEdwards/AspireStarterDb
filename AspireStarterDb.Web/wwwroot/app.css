@@ -28,6 +28,10 @@ h1:focus {
     outline: 1px solid #26b050;
 }
 
+ul.validation-errors {
+    list-style-type: none;
+}
+
 .invalid {
     outline: 1px solid #e51600;
 }
@@ -45,3 +49,14 @@ h1:focus {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+

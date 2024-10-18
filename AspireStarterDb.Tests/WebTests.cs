@@ -19,7 +19,7 @@ public class WebTests
 
         // Act
         var httpClient = app.CreateHttpClient("webfrontend");
-        await resourceNotificationService.WaitForResourceAsync("webfrontend", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await resourceNotificationService.WaitForResourceHealthyAsync("webfrontend").WaitAsync(TimeSpan.FromSeconds(30));
         var response = await httpClient.GetAsync("/");
 
         // Assert
@@ -44,9 +44,9 @@ public class WebTests
         // Act
         var httpClient = app.CreateHttpClient("webfrontend");
 
-        await resourceNotificationService.WaitForResourceAsync("todosdb", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
-        await resourceNotificationService.WaitForResourceAsync("apiservice", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
-        await resourceNotificationService.WaitForResourceAsync("webfrontend", KnownResourceStates.Running).WaitAsync(TimeSpan.FromSeconds(30));
+        await resourceNotificationService.WaitForResourceHealthyAsync("todosdb").WaitAsync(TimeSpan.FromSeconds(30));
+        await resourceNotificationService.WaitForResourceHealthyAsync("apiservice").WaitAsync(TimeSpan.FromSeconds(30));
+        await resourceNotificationService.WaitForResourceHealthyAsync("webfrontend").WaitAsync(TimeSpan.FromSeconds(30));
 
         var response = await httpClient.GetAsync("/todos");
 

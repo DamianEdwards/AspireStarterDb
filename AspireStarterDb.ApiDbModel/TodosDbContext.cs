@@ -4,18 +4,42 @@ namespace AspireStarterDb.ApiDbModel;
 
 public class TodosDbContext(DbContextOptions<TodosDbContext> options) : DbContext(options)
 {
+    public const string TodosUniqueIndex = $"IX_{nameof(Todos)}_Unique";
+
     public DbSet<Todo> Todos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Add sample seed data.
-        // Learn more about seeding data at https://learn.microsoft.com/ef/core/modeling/data-seeding
-        modelBuilder.Entity<Todo>().HasData(
-            new Todo { Id = 1, Title = "Walk the dog", IsComplete = false },
-            new Todo { Id = 2, Title = "Do the dishes", IsComplete = false },
-            new Todo { Id = 3, Title = "Do the laundry", IsComplete = true },
-            new Todo { Id = 4, Title = "Clean the bathroom", IsComplete = false },
-            new Todo { Id = 5, Title = "Clean the car", IsComplete = true }
-        );
+        var todoBuilder = modelBuilder.Entity<Todo>()
+            .ToTable(b => b.HasCheckConstraint("CK_CompletedOn",
+                // SQL Server
+                $"[{nameof(Todo.CompletedOn)}] = NULL OR [{nameof(Todo.CompletedOn)}] > [{nameof(Todo.CreatedOn)}]"));
+                // PostgreSQL
+                //$"\"{nameof(Todo.CompletedOn)}\" IS NULL OR \"{nameof(Todo.CompletedOn)}\" > \"{nameof(Todo.CreatedOn)}\""));
+        todoBuilder.HasIndex(e => new { e.Title, e.CompletedOn }, TodosUniqueIndex)
+            .IsUnique().HasFilter(null);
+        todoBuilder.Property(t => t.CreatedOn)
+            // SQL Server
+            .HasDefaultValueSql("GETUTCDATE()");
+            // PostgreSQL
+            //.HasDefaultValueSql("CURRENT_TIMESTAMP");
+    }
+
+    public static async Task SeedAsync(DbContext dbContext, bool storeManagementPerformed, CancellationToken cancellationToken)
+    {
+        var todosDbContext = (TodosDbContext)dbContext;
+
+        if (!await todosDbContext.Todos.AnyAsync(cancellationToken))
+        {
+            todosDbContext.Todos.AddRange(
+                new Todo { Title = "Mow the lawn" },
+                new Todo { Title = "Take out the trash" },
+                new Todo { Title = "Vacuum the house", CompletedOn = DateTime.UtcNow.AddDays(-4) },
+                new Todo { Title = "Wash the car" },
+                new Todo { Title = "Clean the gutters", CompletedOn = DateTime.UtcNow.AddDays(-7) }
+            );
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
     }
 }

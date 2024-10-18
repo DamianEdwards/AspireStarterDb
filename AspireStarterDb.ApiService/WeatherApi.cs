@@ -6,10 +6,7 @@ public static class WeatherApi
     {
         var weather = app.MapGroup("/weatherforecast");
 
-        var summaries = new[]
-        {
-            "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-        };
+        string[] summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
 
         weather.MapGet("/", () =>
         {

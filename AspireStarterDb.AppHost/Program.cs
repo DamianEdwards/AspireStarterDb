@@ -1,22 +1,37 @@
+using AspireStarterDb.AppHost;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var cache = builder.AddRedis("cache")
-    .WithRedisCommander();
+    .WithRedisInsight();
 
-var postgres = builder.AddPostgres("postgres")
-    .WithPgAdmin();
+//var dbServer = builder.AddPostgres("postgres")
+//    .WithLifetime(ContainerLifetime.Persistent)
+//    .WithPgAdmin();
 
-var todosDb = postgres.AddDatabase("todosdb");
+var dbServer = builder.AddSqlServer("sqlserver")
+    .WithLifetime(ContainerLifetime.Persistent);
 
+var todosDb = dbServer.AddDatabase("todosdb");
+
+// The ApiDbService project is responsible for managing the database schema and seeding data.
+var apiDbService = builder.AddProject<Projects.AspireStarterDb_ApiDbService>("apidbservice")
+    .WithReference(todosDb)
+    .WaitFor(todosDb)
+    .WithHttpsHealthCheck("/health")
+    .WithHttpsCommand("/reset-db", "Reset Database", iconName: "DatabaseLightning");
+
+// The ApiService project provides backend HTTP APIs for the web frontend.
 var apiService = builder.AddProject<Projects.AspireStarterDb_ApiService>("apiservice")
-    .WithReference(todosDb);
+    .WithReference(todosDb)
+    .WaitFor(apiDbService);
 
-builder.AddProject<Projects.AspireStarterDb_ApiDbService>("apidbservice")
-    .WithReference(todosDb);
-
+// The Web project is a Blazor web frontend.
 builder.AddProject<Projects.AspireStarterDb_Web>("webfrontend")
     .WithExternalHttpEndpoints()
     .WithReference(cache)
-    .WithReference(apiService);
+    .WithReference(apiService)
+    .WaitFor(apiService)
+    .WaitFor(cache);
 
 builder.Build().Run();

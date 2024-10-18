@@ -1,28 +1,29 @@
-using Microsoft.EntityFrameworkCore;
 using AspireStarterDb.ApiDbModel;
-using AspireStarterDb.ApiDbService;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add service defaults & Aspire integrations.
 builder.AddServiceDefaults();
+builder.AddTodosDbContext("todosdb");
 
-builder.Services.AddDbContextPool<TodosDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("todosdb"), sqlOptions =>
-    {
-        // Configure the DbContext to use this app's assembly for migrations, rather than
-        // the assembly containing the DbContext.
-        sqlOptions.MigrationsAssembly(typeof(Program).Assembly.GetName().Name);
-    }));
-builder.EnrichNpgsqlDbContext<TodosDbContext>();
-
-// Enable tracing for the database initializer.
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing.AddSource(DbInitializer.ActivitySourceName));
-
-// Register the database initializer and health check.
-builder.Services.AddDbInitializer<TodosDbContext>();
+// Add services to the container.
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapPost("/reset-db", async (TodosDbContext db) =>
+    {
+        // Delete and recreate the database. This is useful for development scenarios to reset the database to its initial state.
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+    });
+}
 
 app.MapDefaultEndpoints();
 
