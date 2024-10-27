@@ -22,11 +22,11 @@ else
     <div class="todos-list list-group list-group-flush col-12 col-lg-10 col-xl-8">
         @foreach (var todo in todos)
         {
-            var (editContext, messageStore) = GetFormContext(todo);
+            var (editContext, model) = GetFormContextAndModel(todo);
             var completedButton = GetCompletedButtonAttributes(todo);
 
             <div class="list-group-item align-items-center @(todo.IsComplete ? "complete" : "incomplete")">
-                <EditForm EditContext="editContext" Enhance class="position-relative">
+                <EditForm EditContext="editContext" Model="model" Enhance class="position-relative">
                     <DataAnnotationsValidator />
                     @* Configure all edit forms to dispatch to the same target form handler *@
                     <FormHandler Target="UpdateTodo" />
@@ -45,7 +45,7 @@ else
                         </div>
                         <div class="col g-1">
                             <div class="position-relative edit-controls">
-                                <input type="text" class="@editContext.GetFieldClass(() => todo.Title)" readonly="@todo.IsComplete"
+                                <input type="text" class="@updateEditContext.GetFieldClass(() => todo.Title)" readonly="@todo.IsComplete"
                                        name="@(nameof(UpdatingTodo)).@(nameof(UpdatingTodo.Title))" @bind-value="todo.Title" />
                                 @if (!todo.IsComplete)
                                 {
@@ -78,8 +78,8 @@ else
 }
 
 @code {
-    private Dictionary<int, EditContext> updateEditContexts = new();
-    private Dictionary<int, ValidationMessageStore> updateMessageStores = new();
+    private EditContext? updateEditContext;
+    private ValidationMessageStore? updateMessageStore;
     private Todo[]? todos;
 
     [SupplyParameterFromForm]
@@ -105,9 +105,7 @@ else
 
     private async Task UpdateAsync()
     {
-        if (UpdatingTodo is not null
-            && updateEditContexts.TryGetValue(UpdatingTodo.Id, out var editContext)
-            && updateMessageStores.TryGetValue(UpdatingTodo.Id, out var messageStore))
+        if (UpdatingTodo is not null && updateEditContext is not null && updateMessageStore is not null)
         {
             if (IsDeleting)
             {
@@ -115,7 +113,7 @@ else
             }
             else
             {
-                var contextTodo = (Todo)editContext.Model;
+                var contextTodo = (Todo)updateEditContext.Model;
 
                 // Update the model on the EditContext with the changes from the form
                 contextTodo.Title = UpdatingTodo.Title;
@@ -127,14 +125,14 @@ else
                     false => null,
                 };
 
-                var isValid = editContext.Validate();
+                var isValid = updateEditContext.Validate();
 
                 if (isValid)
                 {
                     var (wasUpdated, validationProblem) = await TodosApi.UpdateTodoAsync(contextTodo);
                     if (!wasUpdated)
                     {
-                        messageStore.AddValidationErrors(editContext, validationProblem);
+                        updateMessageStore.AddValidationErrors(updateEditContext, validationProblem);
                         isValid = false;
                     }
                 }
@@ -153,13 +151,26 @@ else
         Navigation.Refresh();
     }
 
-    private (EditContext, ValidationMessageStore) GetFormContext(Todo todo)
+    private (EditContext?, Todo?) GetFormContextAndModel(Todo todo)
     {
-        var editContext = updateEditContexts.TryGetValue(todo.Id, out var ec) ? ec : new(todo);
-        var messageStore = updateMessageStores.TryGetValue(todo.Id, out var ms) ? ms : new(editContext);
-        updateEditContexts.TryAdd(todo.Id, editContext);
-        updateMessageStores.TryAdd(todo.Id, messageStore);
-        return (editContext, messageStore);
+        EditContext? editContext = null;
+        Todo? model = todo;
+
+        if (todo.Id == UpdatingTodo?.Id)
+        {
+            // If this is the todo being updated then use the EditContext
+            updateEditContext ??= new(todo);
+            editContext = updateEditContext;
+            updateMessageStore ??= new(updateEditContext);
+            model = null;
+        }
+
+        if (editContext is not null && model is not null)
+        {
+            throw new InvalidOperationException("EditContext and Model should not both be null!");
+        }
+
+        return (editContext, model);
     }
 
     private (string Icon, string Title, string Value) GetCompletedButtonAttributes(Todo todo)
