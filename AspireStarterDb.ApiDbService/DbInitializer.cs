@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using OpenTelemetry.Trace;
 
 namespace AspireStarterDb.ApiDbService;
 
@@ -24,7 +23,7 @@ internal class DbInitializer<TDbContext>(IHostEnvironment hostEnvironment, IServ
         }
         catch (Exception ex)
         {
-            activity?.RecordException(ex);
+            activity?.AddException(ex);
             throw;
         }
     }

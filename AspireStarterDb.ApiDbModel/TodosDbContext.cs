@@ -6,7 +6,7 @@ public class TodosDbContext(DbContextOptions<TodosDbContext> options) : DbContex
 {
     public const string TodosUniqueIndex = $"IX_{nameof(Todos)}_Unique";
 
-    public DbSet<Todo> Todos { get; set; }
+    public required DbSet<Todo> Todos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
